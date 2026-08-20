@@ -74,7 +74,7 @@ body.cinematic-blackout .floor-grid {
   transform-style: preserve-3d;
 }
 
-/* ── HOLOGRAPHIC SCREEN TILE (2.0s Silky Fade-In) ── */
+/* ── HOLOGRAPHIC SCREEN TILE ─────────────────────── */
 .holo-screen {
   position: absolute;
   width: 440px; height: 260px;
@@ -86,8 +86,8 @@ body.cinematic-blackout .floor-grid {
   overflow: hidden;
   cursor: pointer;
   transition: opacity 2.0s cubic-bezier(0.25, 1, 0.5, 1),
-             transform .35s cubic-bezier(.16,1,.3,1),
-             box-shadow .25s, border-color .25s, filter .3s ease;
+             transform 2.0s cubic-bezier(0.16, 1, 0.3, 1),
+             box-shadow 2.0s ease, filter 2.0s ease;
   transform-style: preserve-3d;
   display: block;
 }
@@ -113,6 +113,17 @@ body.cinematic-blackout .floor-grid {
   border-color: var(--green) !important;
   box-shadow: 0 0 75px rgba(0,255,136,.8), inset 0 0 34px rgba(0,255,136,.35) !important;
   z-index: 100;
+}
+
+/* Warp In Animation States */
+.holo-screen.warp-init {
+  opacity: 0 !important;
+  filter: brightness(3.5) contrast(1.6) drop-shadow(0 0 50px #00f0ff) !important;
+}
+
+.holo-screen.warp-ignited {
+  opacity: 1 !important;
+  filter: brightness(1) contrast(1) drop-shadow(0 0 0px transparent) !important;
 }
 
 /* Screen Top Bar */

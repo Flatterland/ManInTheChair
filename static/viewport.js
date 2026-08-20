@@ -897,7 +897,13 @@ async function launchCinematic(optionType, topic) {
   muteAllScreensQuiet();
 
   // Hide all screens during 5-second buffer warmup
-  screens.forEach(s => { if (s.el) s.el.style.opacity = '0'; });
+  screens.forEach(s => {
+    if (s.el) {
+      s.el.style.opacity = '0';
+      s.el.classList.remove('warp-ignited');
+      s.el.classList.add('warp-init');
+    }
+  });
 
   let isCancelled = false;
   cinematicCancelFn = () => {
@@ -913,7 +919,9 @@ async function launchCinematic(optionType, topic) {
     if (windupBox) windupBox.style.display = 'none';
     screens.forEach(s => {
       if (s.el) {
+        s.el.classList.remove('warp-init', 'warp-ignited');
         s.el.style.opacity = '1';
+        s.el.style.transform = '';
         s.el.style.transition = 'opacity 0.4s ease, transform 0.35s ease';
       }
     });
@@ -954,97 +962,106 @@ async function launchCinematic(optionType, topic) {
   if (optionType === 1) {
     if (banner) banner.textContent = `COSMIC CONSTELLATION: ${(topic || YT.currentQuery || 'SPACE').toUpperCase()}`;
 
-    // 15 Organic FLAT Positions on the SAME Z-PLANE (z: 0) to avoid any line-of-sight occlusion
+    // 15 Organic FLAT Positions within view frame (All z=0, rotY=0, rotX=0)
     const flatConstellation = [
       // Hero (0s): Dead center
-      { x: 0, y: 0, z: 0, time: 0, vol: 100 },
-      // 2nd video (10.0s): Upper left
-      { x: -520, y: -190, z: 0, time: 10.0, vol: 55 },
-      // 3rd video (14.0s): Lower right
-      { x: 530, y: 180, z: 0, time: 14.0, vol: 50 },
-      // 4th video (17.5s): Upper right
-      { x: 520, y: -200, z: 0, time: 17.5, vol: 45 },
-      // 5th video (21.0s): Lower left
-      { x: -530, y: 200, z: 0, time: 21.0, vol: 45 },
-      // 6th video (24.5s): Far left wing
-      { x: -1000, y: -40, z: 0, time: 24.5, vol: 40 },
-      // 7th video (28.0s): Far right wing
-      { x: 1000, y: 50, z: 0, time: 28.0, vol: 40 },
-      // 8th video (31.5s): Zenith crown
-      { x: 0, y: -360, z: 0, time: 31.5, vol: 38 },
-      // 9th video (35.0s): Bottom pedestal
-      { x: 0, y: 370, z: 0, time: 35.0, vol: 38 },
-      // 10th video (38.5s): High top-left
-      { x: -480, y: -420, z: 0, time: 38.5, vol: 35 },
-      // 11th video (42.0s): High top-right
-      { x: 480, y: -420, z: 0, time: 42.0, vol: 35 },
-      // 12th video (45.5s): Low bottom-left
-      { x: -480, y: 430, z: 0, time: 45.5, vol: 32 },
-      // 13th video (49.0s): Low bottom-right
-      { x: 480, y: 430, z: 0, time: 49.0, vol: 32 },
-      // 14th video (52.5s): Distant outer left
-      { x: -1040, y: -360, z: 0, time: 52.5, vol: 30 },
-      // 15th video (56.0s): Distant outer right
-      { x: 1040, y: -360, z: 0, time: 56.0, vol: 30 },
+      { x: 0, y: 0, time: 0, vol: 100 },
+      // Ring 1 (6s to 15s): Immediately framing hero
+      { x: -360, y: -160, time: 6.0, vol: 55 },   // 2: Top-left
+      { x: 360, y: 160, time: 9.0, vol: 50 },     // 3: Bottom-right
+      { x: 360, y: -160, time: 12.0, vol: 45 },   // 4: Top-right
+      { x: -360, y: 160, time: 15.0, vol: 45 },   // 5: Bottom-left
+      // Ring 2 (18s to 27s): Mid constellation wings & poles
+      { x: -640, y: 0, time: 18.0, vol: 40 },     // 6: Left flank
+      { x: 640, y: 0, time: 21.0, vol: 40 },      // 7: Right flank
+      { x: 0, y: -290, time: 24.0, vol: 38 },     // 8: Zenith crown
+      { x: 0, y: 290, time: 27.0, vol: 38 },      // 9: Bottom pedestal
+      // Ring 3 (30s to 45s): Outer corners and apexes
+      { x: -560, y: -300, time: 30.0, vol: 35 },  // 10: High-left
+      { x: 560, y: -300, time: 33.0, vol: 35 },   // 11: High-right
+      { x: -560, y: 300, time: 36.0, vol: 32 },   // 12: Low-left
+      { x: 560, y: 300, time: 39.0, vol: 32 },    // 13: Low-right
+      { x: -940, y: 0, time: 42.0, vol: 30 },     // 14: Far outer left
+      { x: 940, y: 0, time: 45.0, vol: 30 },      // 15: Far outer right
     ];
 
-    // Position each screen FLAT on the Z=0 plane (rotY: 0, rotX: 0)
+    // Set initial position of all secondary screens to scale(0.2) + opacity 0
     screens.forEach((s, idx) => {
       const pos = flatConstellation[idx] || flatConstellation[0];
       if (s.el) {
-        s.el.style.opacity = '0';
-        s.el.style.transition = 'opacity 2.0s cubic-bezier(0.25, 1, 0.5, 1)';
-        s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(1)`;
+        if (idx === 0) {
+          s.el.style.opacity = '1';
+          s.el.style.transform = `translate3d(0px,0px,0px) rotateY(0deg) rotateX(0deg) scale(1)`;
+        } else {
+          s.el.style.opacity = '0';
+          s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0px) rotateY(0deg) rotateX(0deg) scale(0.2)`;
+        }
       }
     });
 
-    // Start Hero video right in center, with camera up-close at camZ = 460px to fill the frame
+    // Start Hero video right in center, with camera up-close at camZ = 380px to fill the frame
     const heroScreen = screens[0];
-    let curZ = 460;
+    let curZ = 380;
     vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${curZ}px)`;
 
     if (heroScreen && heroScreen.el) {
-      heroScreen.el.style.opacity = '1';
       unmuteScreen(0);
       setScreenVolume(0, 100);
     }
 
     const sequenceStart = performance.now();
-    const lingerDuration = 10000;   // 10s lingering on single full-frame hero video
-    const zoomDuration = 48000;     // 48s ultra-slow grand pull-back
-    const totalDuration = lingerDuration + zoomDuration; // 58s total
+    const lingerDuration = 6000;    // 6s intimate gaze on single full-frame hero video
+    const zoomDuration = 44000;     // 44s smooth cinematic pull-back
+    const totalDuration = lingerDuration + zoomDuration; // 50s total
+
+    // Helper to ignite a screen with radiant warp animation and sound fade
+    function igniteWarpScreen(idx, pos, targetVol) {
+      const s = screens[idx];
+      if (!s || !s.el || s._ignited) return;
+      s._ignited = true;
+
+      s.el.style.transition = 'opacity 1.8s cubic-bezier(0.25, 1, 0.5, 1), transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 1.8s ease';
+      s.el.style.opacity = '1';
+      s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0px) rotateY(0deg) rotateX(0deg) scale(1)`;
+      s.el.style.boxShadow = '0 0 45px rgba(0,240,255,0.7), inset 0 0 25px rgba(0,240,255,0.3)';
+
+      setTimeout(() => {
+        if (s.el && isCinematicRunning) {
+          s.el.style.boxShadow = '0 0 32px rgba(0,240,255,0.22), inset 0 0 20px rgba(0,240,255,0.1)';
+        }
+      }, 1900);
+
+      fadeAudioIn(idx, targetVol, 2000);
+    }
 
     function animateConstellation(now) {
       if (isCancelled) return;
       const elapsed = now - sequenceStart;
       const elapsedSec = elapsed / 1000;
 
-      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 10s) ──────────────────────────
+      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 6s) ──────────────────────────
       if (elapsed <= lingerDuration) {
         const p = elapsed / lingerDuration;
         const driftPitch = Math.sin(p * Math.PI) * 1.5;
         const driftYaw = Math.sin(p * Math.PI * 0.7) * 1.4;
-        curZ = 460 - p * 15; // 460 to 445
+        curZ = 380 - p * 15; // 380 to 365
         vp.style.transform = `translate3d(0,0,0) rotateX(${driftPitch}deg) rotateY(${driftYaw}deg) translateZ(${curZ}px)`;
 
-      // ── PHASE 2: ULTRA-SLOW PULL-BACK & SEQUENTIAL 2.0s FADE-INS ───────────
+      // ── PHASE 2: ULTRA-SLOW PULL-BACK & SEQUENTIAL RADIANT WARP-INS ─────────
       } else {
         const pullElapsed = elapsed - lingerDuration;
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 445 - ease * 900; // from +445 down to -455
-        const tiltX = Math.sin(pullProgress * Math.PI) * 4;
+        curZ = 365 - ease * 885; // from +365 down to -520
+        const tiltX = Math.sin(pullProgress * Math.PI) * 3;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
       }
 
-      // Check and ignite secondary screens with 2.0-second visual fade AND matching audio volume fade
+      // Check and ignite secondary screens as their timestamp arrives
       flatConstellation.forEach((pos, idx) => {
-        if (elapsedSec >= pos.time && screens[idx] && screens[idx].el) {
-          if (screens[idx].el.style.opacity !== '1') {
-            screens[idx].el.style.opacity = '1';
-            fadeAudioIn(idx, pos.vol, 2000);
-          }
+        if (idx > 0 && elapsedSec >= pos.time) {
+          igniteWarpScreen(idx, pos, pos.vol);
         }
       });
 
@@ -1170,6 +1187,7 @@ async function launchCinematic(optionType, topic) {
 function muteAllScreensQuiet() {
   screens.forEach((s, idx) => {
     s.isMuted = true;
+    s._ignited = false;
     postMessageToScreen(idx, { event: 'command', func: 'mute', args: [] });
     updateScreenAudioUI(idx);
   });
