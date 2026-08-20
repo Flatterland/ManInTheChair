@@ -14,6 +14,18 @@
         <div id="screens-cluster"></div>
     </div>
 
+    <!-- Cinematic Active Mode Overlay -->
+    <div id="cinematic-overlay" style="display:none;">
+        <div class="cinematic-hud">
+            <span class="cinematic-rec-dot">● REC</span>
+            <div id="cinematic-banner">DRAMATIC PULL-BACK MATRIX IGNITION</div>
+            <button class="cinematic-exit-btn" id="btn-cinematic-exit">EXIT CINEMATIC [ESC]</button>
+        </div>
+    </div>
+
+    <!-- UI Restore Floating Button (Visible only when UI is hidden) -->
+    <button id="ui-restore-btn" style="display:none;" title="Show Interface [H]">👁️ SHOW UI</button>
+
     <!-- Top HUD Bar -->
     <div class="top-hud">
         <div class="brand">
@@ -31,11 +43,13 @@
         </form>
 
         <div class="hud-controls">
-            <button class="hud-btn fx-btn" id="btn-fx-mode" title="Toggle 3D Vector / Shader Filter">🎨 FX: CYBER</button>
+            <button class="hud-btn highlight-btn" id="btn-cinematic" title="Launch Cinematic Sequences">🎬 CINEMATIC</button>
+            <button class="hud-btn" id="btn-visual-fx" title="Visual FX, Shaders, DoF & Scanlines">✨ VISUAL FX</button>
             <button class="hud-btn" id="btn-playlist">📋 STREAMS</button>
             <button class="hud-btn" id="btn-mixer">🎛️ VOL MIXER</button>
             <button class="hud-btn" id="btn-mute-all">🔇 MUTE ALL</button>
             <button class="hud-btn add-btn" id="btn-add">➕ ADD SCREEN</button>
+            <button class="hud-btn" id="btn-hide-ui" title="Hide UI [H]">👁️ HIDE</button>
             <button class="hud-btn" id="btn-reset-cam">🎯 RESET CAM</button>
             <button class="hud-btn cam-btn active" data-cam="chair">💺 CHAIR</button>
             <button class="hud-btn cam-btn" data-cam="tactical">🛰 TACTICAL</button>
@@ -58,7 +72,7 @@
     <!-- Left Drawer: Now Playing Streams List -->
     <div class="side-panel left-drawer" id="playlist-panel">
         <div class="panel-title-row">
-            <span>📋 ACTIVE VIDEO STREAMS</span>
+            <span>📋 ACTIVE VIDEO STREAMS (9 DEPLOYED)</span>
             <button class="panel-close-btn" id="playlist-close">✕</button>
         </div>
         <div class="playlist-sub" id="playlist-queue-info">Loading active streams...</div>
@@ -67,12 +81,75 @@
         </div>
     </div>
 
-    <!-- Right Drawer: Audio / Volume Mixer Panel -->
+    <!-- Right Drawer: Visual Elements & Shaders Panel -->
+    <div class="side-panel right-drawer" id="visual-fx-panel">
+        <div class="panel-title-row">
+            <span>✨ VISUAL ELEMENTS & SHADERS</span>
+            <button class="panel-close-btn" id="visual-fx-close">✕</button>
+        </div>
+        
+        <div class="vfx-section">
+            <div class="vfx-label">HOLOGRAPHIC COLOR THEME</div>
+            <div class="theme-grid">
+                <button class="theme-btn active" data-theme="cyber">🎨 CYBER</button>
+                <button class="theme-btn" data-theme="green-vector">🟢 MATRIX</button>
+                <button class="theme-btn" data-theme="amber-tactical">🟠 AMBER</button>
+                <button class="theme-btn" data-theme="cyan-holo">🔵 CYAN</button>
+                <button class="theme-btn" data-theme="synthwave">🟣 SYNTH</button>
+            </div>
+        </div>
+
+        <div class="vfx-section">
+            <div class="vfx-label">GRID & SCREEN SPACING</div>
+            <div class="slider-group">
+                <label>SPACING</label>
+                <input type="range" id="sl-screen-spacing" min="0.4" max="1.8" step="0.05" value="1.0" />
+                <span id="spacing-val">1.0x</span>
+            </div>
+        </div>
+
+        <div class="vfx-section">
+            <div class="vfx-label">DEPTH OF FIELD (DOF) & FOCUS BLUR</div>
+            <div class="mixer-toggle-row">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="chk-dof-enable" />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Enable 3D Depth-of-Field Blur</span>
+            </div>
+            <div class="slider-group" style="margin-top:6px;">
+                <label>BLUR</label>
+                <input type="range" id="sl-dof-strength" min="1" max="12" step="1" value="6" />
+            </div>
+        </div>
+
+        <div class="vfx-section">
+            <div class="vfx-label">CRT SCANLINES & PHOSPHOR GLOW</div>
+            <div class="mixer-toggle-row">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="chk-scanlines-enable" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Holographic Scanlines</span>
+            </div>
+            <div class="slider-group" style="margin-top:6px;">
+                <label>OPACITY</label>
+                <input type="range" id="sl-scanlines-opacity" min="0.05" max="0.5" step="0.02" value="0.22" />
+            </div>
+            <div class="slider-group">
+                <label>FLOOR</label>
+                <input type="range" id="sl-floor-brightness" min="0.1" max="1.0" step="0.05" value="1.0" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Drawer: Audio / Volume & Spatial Mixer Panel -->
     <div class="side-panel right-drawer" id="mixer-panel">
         <div class="panel-title-row">
-            <span>🎛️ MULTI-STREAM AUDIO MIXER</span>
+            <span>🎛️ MULTI-STREAM & SPATIAL MIXER</span>
             <button class="panel-close-btn" id="mixer-close">✕</button>
         </div>
+        
         <div class="mixer-master-box">
             <div class="master-row">
                 <span class="master-label">MASTER VOLUME</span>
@@ -87,6 +164,32 @@
                 <span class="toggle-label">Solo mode (unmuting one mutes others)</span>
             </div>
         </div>
+
+        <!-- 3D Spatial Audio Section -->
+        <div class="spatial-audio-box">
+            <div class="spatial-header">
+                <span class="spatial-title">🔊 3D SPATIAL AUDIO POSITIONING</span>
+            </div>
+            <div class="mixer-toggle-row">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="chk-spatial-enable" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Auto-mix by relative camera distance</span>
+            </div>
+            <div class="slider-group" style="margin-top:6px;">
+                <label>FALLOFF</label>
+                <input type="range" id="sl-spatial-sep" min="0.2" max="2.5" step="0.1" value="1.0" />
+            </div>
+            <div class="mixer-toggle-row" style="margin-top:6px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="chk-single-priority" />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Single video priority dominance</span>
+            </div>
+        </div>
+
         <div class="mixer-strips-scroll" id="mixer-strips">
             <!-- Populated dynamically -->
         </div>
@@ -127,7 +230,7 @@
 
     <!-- Bottom Cockpit Bar -->
     <div class="bottom-bar">
-        <span class="stat">ACTIVE SCREENS: <strong id="stat-count">0</strong></span>
+        <span class="stat">ACTIVE SCREENS: <strong id="stat-count">9</strong></span>
         <div class="layout-btns">
             <button class="layout-btn active" data-layout="dome">DOME</button>
             <button class="layout-btn" data-layout="flat">FLAT</button>
@@ -141,11 +244,47 @@
     <div class="modal-back" id="add-modal">
         <div class="modal">
             <div class="modal-title">➕ ADD YOUTUBE SCREEN</div>
-            <div class="modal-sub">Paste any YouTube URL, video ID, or enter any search topic</div>
+            <div class="modal-sub">Enter any search topic (e.g. "Formula 1", "Cyberpunk 4K") or paste URL</div>
             <input id="modal-input" type="text" placeholder="e.g. 'Formula 1', 'Cyberpunk city', or paste URL..." />
             <div class="modal-btns">
                 <button class="panel-btn confirm" id="modal-confirm">DEPLOY TO MATRIX</button>
                 <button class="panel-btn" id="modal-cancel">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cinematic Sequences Launcher Modal -->
+    <div class="modal-back" id="cinematic-modal">
+        <div class="modal cinematic-modal-box">
+            <div class="modal-title">🎬 LAUNCH CINEMATIC 15-STREAM EXPERIENCE</div>
+            <div class="modal-sub">Buffers 15 streams and initiates choreographed camera, lighting & audio choreography</div>
+            
+            <input id="cinematic-input" type="text" placeholder="Enter topic or leave blank for current category..." />
+            
+            <div class="cinematic-options-grid">
+                <button class="cin-opt-card" data-opt="1">
+                    <div class="cin-opt-title">🌟 OPTION 1: DRAMATIC ZOOM OUT</div>
+                    <div class="cin-opt-desc">Starts in pitch black with single isolated video & loud audio, camera slowly pulls back as 14 surrounding screens ignite in concentric rings and volume builds into a wall of sound.</div>
+                </button>
+
+                <button class="cin-opt-card" data-opt="2">
+                    <div class="cin-opt-title">🌀 OPTION 2: 360° VORTEX WARP</div>
+                    <div class="cin-opt-desc">Rapid cylindrical spinning ascension through a 15-stream vortex, easing down into an orbital command glide.</div>
+                </button>
+
+                <button class="cin-opt-card" data-opt="3">
+                    <div class="cin-opt-title">🟢 OPTION 3: TACTICAL MATRIX DEPLOYMENT</div>
+                    <div class="cin-opt-desc">Activates green vector phosphor mode with a cascading grid drop-in and high-altitude tactical fly-through.</div>
+                </button>
+
+                <button class="cin-opt-card" data-opt="4">
+                    <div class="cin-opt-title">🛰️ OPTION 4: SPOTLIGHT FLY-AROUND</div>
+                    <div class="cin-opt-desc">Figure-8 orbit with dynamic acoustic spotlighting that boosts the nearest screen as the camera swoops past.</div>
+                </button>
+            </div>
+
+            <div class="modal-btns">
+                <button class="panel-btn" id="cinematic-cancel">CANCEL</button>
             </div>
         </div>
     </div>

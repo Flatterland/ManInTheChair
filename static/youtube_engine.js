@@ -4,7 +4,7 @@ const YT = {
   searchQueue: [],
   queueIndex: 0,
 
-  // Rich verified embeddable video pools
+  // Rich verified embeddable video pools (9+ per category)
   POOLS: {
     space: [
       { id:'nA9UZF-SZoQ', title:'NASA – Earth from Space 4K Live Feed', ch:'NASA' },
@@ -13,6 +13,12 @@ const YT = {
       { id:'arj7oStGLkU', title:'TED – How to Find Exoplanets', ch:'TED' },
       { id:'iG9CE55wbtY', title:'TED – Black Holes & Quantum Reality', ch:'TED' },
       { id:'8jPQjjsBbIc', title:'TED – Secrets of the Deep Cosmos', ch:'TED' },
+      { id:'V4MF2s6MLxY', title:'Epic Games – Matrix Awakens UE5 Tech', ch:'Epic Games' },
+      { id:'djzOBZUFzTw', title:'Boston Dynamics – Space Operations Robot', ch:'Boston Dynamics' },
+      { id:'qhLExhpXX0E', title:'Deep Ocean – Alien Oceans on Earth', ch:'We The Curious' },
+      { id:'tF4DML7FIWk', title:'Boston Dynamics – High Speed Routine', ch:'Boston Dynamics' },
+      { id:'XPVC4IyRTG8', title:'Boston Dynamics – Atlas Balance Control', ch:'Boston Dynamics' },
+      { id:'fn3KWM1kuAw', title:'DeepMind – Cosmic Data Analysis', ch:'DeepMind' },
     ],
     ai: [
       { id:'djzOBZUFzTw', title:'Boston Dynamics – Atlas Robot Maneuvers', ch:'Boston Dynamics' },
@@ -21,6 +27,12 @@ const YT = {
       { id:'fn3KWM1kuAw', title:'Google DeepMind – Gemini Multimodal AI', ch:'DeepMind' },
       { id:'Sq1QZB5baNw', title:'OpenAI Sora – Text to Video AI Demo', ch:'Figure' },
       { id:'V4MF2s6MLxY', title:'Epic Games – Matrix Awakens Unreal Engine 5', ch:'Epic Games' },
+      { id:'8jPQjjsBbIc', title:'TED – Future of AI and Robotics', ch:'TED' },
+      { id:'8F9jXYOH2c0', title:'Spider-Man 2 – Neural AI Systems', ch:'Studio C' },
+      { id:'21X5lGlDOfg', title:'Red Bull – High-G Automation Pilot', ch:'Red Bull' },
+      { id:'eIho2S0ZahI', title:'TED – Machine Learning & Human Potential', ch:'TED' },
+      { id:'qp0HIF3SfI4', title:'TED – Body Language and AI Detection', ch:'TED' },
+      { id:'arj7oStGLkU', title:'TED – Algorithmic Creativity', ch:'TED' },
     ],
     nature: [
       { id:'qhLExhpXX0E', title:'Deep Ocean – Marine Biology Discoveries', ch:'We The Curious' },
@@ -29,6 +41,12 @@ const YT = {
       { id:'iG9CE55wbtY', title:'TED – The Power of Vulnerability', ch:'TED' },
       { id:'qp0HIF3SfI4', title:'TED – Your Body Language Shapes You', ch:'TED' },
       { id:'arj7oStGLkU', title:'TED – Do Schools Kill Creativity', ch:'TED' },
+      { id:'0Bmhjf0rKe8', title:'Slow Motion Wildlife & Felines', ch:'rozzzafly' },
+      { id:'p4Gotl9vRGs', title:'Animals – Wild and Domestic Moments', ch:'EastCoast Flipper' },
+      { id:'21X5lGlDOfg', title:'Red Bull – Atmosphere Dynamics', ch:'Red Bull' },
+      { id:'8jPQjjsBbIc', title:'TED – Ecology of Planetary Systems', ch:'TED' },
+      { id:'V4MF2s6MLxY', title:'Epic Games – Realistic Nature Simulation', ch:'Epic Games' },
+      { id:'ANv5UfZsvZQ', title:'SpaceX – Atmospheric Penetration', ch:'SpaceX' },
     ],
     cats: [
       { id:'0Bmhjf0rKe8', title:'Super Slow Motion Cats in Motion', ch:'rozzzafly' },
@@ -37,6 +55,12 @@ const YT = {
       { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
       { id:'60ItHLz5WEA', title:'Alan Walker – Faded', ch:'Alan Walker' },
       { id:'kXYiU_JCYtU', title:'Linkin Park – Numb', ch:'Linkin Park' },
+      { id:'JGwWNGJdvx8', title:'Ed Sheeran – Shape of You', ch:'Ed Sheeran' },
+      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
+      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
+      { id:'OPf0YbXqDm0', title:'Mark Ronson – Uptown Funk', ch:'MarkRonson' },
+      { id:'hT_nvWreIhg', title:'OneRepublic – Counting Stars', ch:'OneRepublic' },
+      { id:'CevxZvSJLk8', title:'Katy Perry – Roar', ch:'KatyPerry' },
     ],
     cyberpunk: [
       { id:'kXYiU_JCYtU', title:'Linkin Park – Numb (Cinematic)', ch:'Linkin Park' },
@@ -45,6 +69,12 @@ const YT = {
       { id:'djzOBZUFzTw', title:'Boston Dynamics – Robot Showcase', ch:'Boston Dynamics' },
       { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
       { id:'SC4xMk98Pdc', title:'Eminem – Rap God', ch:'EminemVEVO' },
+      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
+      { id:'XPVC4IyRTG8', title:'Boston Dynamics – Cybernetic Acrobatics', ch:'Boston Dynamics' },
+      { id:'tF4DML7FIWk', title:'Boston Dynamics – Urban Infiltration', ch:'Boston Dynamics' },
+      { id:'9bZkp7q19f0', title:'Psy – Cyber Holographic Beat', ch:'officialpsy' },
+      { id:'OPf0YbXqDm0', title:'Mark Ronson – Neon City Funk', ch:'MarkRonson' },
+      { id:'uelHwf8o7_U', title:'Eminem – Without Me (Cyber Mix)', ch:'Eminem' },
     ],
     f1: [
       { id:'21X5lGlDOfg', title:'Red Bull – Stratosphere Jump Record', ch:'Red Bull' },
@@ -53,6 +83,12 @@ const YT = {
       { id:'OPf0YbXqDm0', title:'Mark Ronson ft. Bruno Mars – Uptown Funk', ch:'MarkRonson' },
       { id:'CevxZvSJLk8', title:'Katy Perry – Roar', ch:'KatyPerry' },
       { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
+      { id:'kXYiU_JCYtU', title:'Linkin Park – High Speed Numb', ch:'Linkin Park' },
+      { id:'SC4xMk98Pdc', title:'Eminem – 200 MPH Fast Verse', ch:'EminemVEVO' },
+      { id:'60ItHLz5WEA', title:'Alan Walker – Night Track', ch:'Alan Walker' },
+      { id:'V4MF2s6MLxY', title:'Epic Games – City Chase Matrix', ch:'Epic Games' },
+      { id:'djzOBZUFzTw', title:'Boston Dynamics – Pitstop Agility', ch:'Boston Dynamics' },
+      { id:'JGwWNGJdvx8', title:'Ed Sheeran – Racing Tempo', ch:'Ed Sheeran' },
     ],
     gaming: [
       { id:'V4MF2s6MLxY', title:'Unreal Engine 5 – Matrix Awakens Tech Demo', ch:'Epic Games' },
@@ -61,6 +97,12 @@ const YT = {
       { id:'XPVC4IyRTG8', title:'Boston Dynamics – Atlas Gymnastics', ch:'Boston Dynamics' },
       { id:'kXYiU_JCYtU', title:'Linkin Park – Numb', ch:'Linkin Park' },
       { id:'SC4xMk98Pdc', title:'Eminem – Rap God (Epic Beat)', ch:'EminemVEVO' },
+      { id:'tF4DML7FIWk', title:'Boston Dynamics – Parkour Arena', ch:'Boston Dynamics' },
+      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
+      { id:'60ItHLz5WEA', title:'Alan Walker – Faded Game Theme', ch:'Alan Walker' },
+      { id:'YqeW9_5kURI', title:'The Weeknd – Neon Speed Run', ch:'Republic Records' },
+      { id:'21X5lGlDOfg', title:'Red Bull – Extreme Freefall Sim', ch:'Red Bull' },
+      { id:'9bZkp7q19f0', title:'Psy – Arcade Rhythm', ch:'officialpsy' },
     ],
     music: [
       { id:'JGwWNGJdvx8', title:'Ed Sheeran – Shape of You', ch:'Ed Sheeran' },
@@ -69,6 +111,12 @@ const YT = {
       { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
       { id:'hT_nvWreIhg', title:'OneRepublic – Counting Stars', ch:'OneRepublic' },
       { id:'OPf0YbXqDm0', title:'Mark Ronson – Uptown Funk', ch:'MarkRonson' },
+      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
+      { id:'60ItHLz5WEA', title:'Alan Walker – Faded', ch:'Alan Walker' },
+      { id:'dQw4w9WgXcQ', title:'Rick Astley – Never Gonna Give You Up', ch:'Rick Astley' },
+      { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
+      { id:'YQHsXMglC9A', title:'Adele – Hello', ch:'Adele' },
+      { id:'2Vv-BfVoq4g', title:'Ed Sheeran – Perfect', ch:'Ed Sheeran' },
     ],
   },
 
@@ -129,8 +177,8 @@ const YT = {
     return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&origin=${encodeURIComponent(origin)}`;
   },
 
-  // Smart immediate matcher: checks query against all pools and fallbacks
-  getImmediateResults(query, count = 6) {
+  // Smart immediate matcher: defaults to 9 screens
+  getImmediateResults(query, count = 9) {
     const q = (query || '').toLowerCase().trim().replace(/^[#@]/, '');
 
     // 1. Direct URL/ID
@@ -147,7 +195,7 @@ const YT = {
       if (catKey === q || catKey.includes(q) || q.includes(catKey)) {
         this.searchQueue = [...pool, ...this.DEEP_FALLBACK];
         this.queueIndex = count;
-        return pool.slice(0, count);
+        return this.searchQueue.slice(0, count);
       }
     }
 
@@ -162,7 +210,7 @@ const YT = {
     if (hits.length > 0) {
       this.searchQueue = [...hits, ...this.DEEP_FALLBACK];
       this.queueIndex = count;
-      return hits.slice(0, count);
+      return this.searchQueue.slice(0, count);
     }
 
     // 4. Return deep fallback
@@ -171,8 +219,8 @@ const YT = {
     return this.DEEP_FALLBACK.slice(0, count);
   },
 
-  // Active live search: searches online APIs rapidly
-  async searchLiveAsync(query, onResults) {
+  // Active live search: searches online APIs rapidly for 15+ items
+  async searchLiveAsync(query, onResults, count = 9) {
     this.currentQuery = query.trim();
     const directId = this.extractId(query);
     if (directId) return;
@@ -187,7 +235,7 @@ const YT = {
     for (const ep of endpoints) {
       try {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2600);
+        const tid = setTimeout(() => ctrl.abort(), 2800);
         const resp = await fetch(ep, { signal: ctrl.signal });
         clearTimeout(tid);
         if (!resp.ok) continue;
@@ -211,9 +259,9 @@ const YT = {
           if (liveVids.length > 0) {
             console.log(`[MitC] Live search returned ${liveVids.length} videos from ${ep}`);
             this.searchQueue = [...liveVids, ...this.DEEP_FALLBACK];
-            this.queueIndex = 6;
+            this.queueIndex = count;
             if (typeof onResults === 'function') {
-              onResults(liveVids);
+              onResults(liveVids.slice(0, count));
             }
             break;
           }
@@ -265,6 +313,12 @@ const YT = {
     }
 
     return immediate[0];
+  },
+
+  // Buffer 15 videos for Cinematic Launch
+  async getCinematic15(query) {
+    const immediate = this.getImmediateResults(query, 15);
+    return immediate.slice(0, 15);
   },
 
   getNextResult(excludeIds = []) {

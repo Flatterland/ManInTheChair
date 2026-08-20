@@ -1,11 +1,36 @@
-// ─── 3D Viewport, Multi-Screen Layout & Audio Matrix Engine ───────────────────
-let screens = [];            // [{ vid:{id,title,ch}, custom:{scale,x,y,z,rot}, isMuted, volume }]
+// ─── 3D Viewport, Multi-Screen Spatial Matrix & Visual FX Engine ──────────────
+let screens = [];            // [{ vid:{id,title,ch}, custom:{scale,x,y,z,rot}, isMuted, volume, baseVol, computedVol }]
 let focusedIdx = null;
 let cameraMode = 'chair';
 let layout = 'dome';
 let soloAudioMode = true;    // Unmuting one screen mutes others
 let masterVolume = 100;
 let masterMuted = false;
+
+// Layout Spacing & Density
+let screenSpacing = 1.0;     // 0.5 to 1.8
+
+// Visual FX state
+let visualFX = {
+  theme: 'cyber',            // 'cyber', 'green-vector', 'amber-tactical', 'cyan-holo', 'synthwave'
+  dofEnabled: false,
+  dofStrength: 6,
+  scanlinesEnabled: true,
+  scanlineOpacity: 0.22,
+  bloomGlow: 1.0,
+  floorGridBrightness: 1.0
+};
+
+// Spatial 3D Audio state
+let spatialAudio = {
+  enabled: true,
+  separation: 1.0,           // 0 to 2.5
+  singlePriority: false,     // Closest screen gets full dominance
+  lastUpdate: 0
+};
+
+// UI Visibility state
+let isUiHidden = false;
 
 // Camera & 3D space state
 let draggingLeft = false, draggingRight = false;
@@ -15,26 +40,25 @@ let camX = 0, camY = 0, tCamX = 0, tCamY = 0;
 let camZ = 0;
 let orbitAngle = 0;
 
-// 360° Ring Spin animation state
+// 360° Ring Spin state
 let ringSpinAngle = 0;
 let ringSpinEnabled = true;
 let ringSpinSpeed = 0.07;
+
+// Cinematic sequence state
+let isCinematicRunning = false;
+let cinematicCancelFn = null;
 
 function initViewport() {
   const vp = document.getElementById('viewport');
 
   // Prevent right-click context menu for smooth panning
-  window.addEventListener('contextmenu', e => {
-    e.preventDefault();
-  });
+  window.addEventListener('contextmenu', e => e.preventDefault());
 
   window.addEventListener('mousedown', e => {
-    if (e.target.closest('.top-hud,.pills-bar,.side-panel,.bottom-bar,.modal-back')) return;
-    if (e.button === 0) {
-      draggingLeft = true;
-    } else if (e.button === 2) {
-      draggingRight = true;
-    }
+    if (e.target.closest('.top-hud,.pills-bar,.side-panel,.bottom-bar,.modal-back,#cinematic-overlay,#ui-restore-btn')) return;
+    if (e.button === 0) draggingLeft = true;
+    else if (e.button === 2) draggingRight = true;
     mx = e.clientX; my = e.clientY;
   });
 
@@ -43,16 +67,13 @@ function initViewport() {
     mx = e.clientX; my = e.clientY;
 
     if (draggingLeft) {
-      // Rotate / Orbit
       tRotY += dx * 0.38;
       tRotX -= dy * 0.28;
       tRotX = Math.max(-75, Math.min(75, tRotX));
     } else if (draggingRight) {
-      // Pan Camera X/Y
       tCamX += dx * 0.85;
       tCamY += dy * 0.85;
-    } else if (cameraMode === 'chair' && focusedIdx === null) {
-      // Subtle head tracking
+    } else if (cameraMode === 'chair' && focusedIdx === null && !isCinematicRunning) {
       tRotY = (e.clientX / window.innerWidth - 0.5) * 2 * 16;
       tRotX = -(e.clientY / window.innerHeight - 0.5) * 2 * 11;
     }
@@ -66,7 +87,7 @@ function initViewport() {
   // Deep zoom (allows zooming right up to screens)
   window.addEventListener('wheel', e => {
     if (e.target.closest('.side-panel')) return;
-    camZ = Math.max(-800, Math.min(620, camZ - e.deltaY * 0.75));
+    camZ = Math.max(-850, Math.min(680, camZ - e.deltaY * 0.75));
   }, { passive: true });
 
   // 6-DOF Keyboard Controls
@@ -78,11 +99,16 @@ function initViewport() {
     if (e.key === 'ArrowDown'  || e.key === 's') tRotX -= 6;
     if (e.key === 'q') tCamX -= 30;
     if (e.key === 'e') tCamX += 30;
-    if (e.key === '+' || e.key === '=') camZ = Math.min(620, camZ + 60);
-    if (e.key === '-' || e.key === '_') camZ = Math.max(-800, camZ - 60);
+    if (e.key === '+' || e.key === '=') camZ = Math.min(680, camZ + 60);
+    if (e.key === '-' || e.key === '_') camZ = Math.max(-850, camZ - 60);
     if (e.key === ' ' || e.key === 'r') resetCam();
     if (e.key === 'm') toggleMasterMute();
-    if (e.key === 'f' && focusedIdx !== null) focusScreen(focusedIdx);
+    if (e.key === 'h' || e.key === 'H') toggleHideUI();
+    if (e.key === 'Escape') {
+      if (isCinematicRunning && cinematicCancelFn) cinematicCancelFn();
+      else if (isUiHidden) toggleHideUI();
+      else unfocus();
+    }
   });
 
   requestAnimationFrame(loop);
@@ -94,20 +120,30 @@ function loop() {
   if (!vp) return;
 
   // 360° Ring Spin update
-  if (layout === 'ring' && ringSpinEnabled && focusedIdx === null && !draggingLeft) {
+  if (layout === 'ring' && ringSpinEnabled && focusedIdx === null && !draggingLeft && !isCinematicRunning) {
     ringSpinAngle = (ringSpinAngle + ringSpinSpeed) % 360;
     applyLayout();
   }
 
-  if (cameraMode === 'orbit') {
-    orbitAngle = (orbitAngle + 0.35) % 360;
-    vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(15deg) rotateY(${orbitAngle}deg) translateZ(-60px)`;
-  } else if (focusedIdx === null) {
-    rotX += (tRotX - rotX) * 0.08;
-    rotY += (tRotY - rotY) * 0.08;
-    camX += (tCamX - camX) * 0.1;
-    camY += (tCamY - camY) * 0.1;
-    vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(${camZ}px)`;
+  // Camera rendering
+  if (!isCinematicRunning) {
+    if (cameraMode === 'orbit') {
+      orbitAngle = (orbitAngle + 0.35) % 360;
+      vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(15deg) rotateY(${orbitAngle}deg) translateZ(-60px)`;
+    } else if (focusedIdx === null) {
+      rotX += (tRotX - rotX) * 0.08;
+      rotY += (tRotY - rotY) * 0.08;
+      camX += (tCamX - camX) * 0.1;
+      camY += (tCamY - camY) * 0.1;
+      vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(${camZ}px)`;
+    }
+  }
+
+  // Spatial Audio & DoF update loop (throttled to ~15fps for efficiency)
+  const now = performance.now();
+  if (now - spatialAudio.lastUpdate > 65) {
+    spatialAudio.lastUpdate = now;
+    updateSpatialAudioAndDoF();
   }
 }
 
@@ -117,7 +153,9 @@ function loadScreens(vids) {
     vid: v,
     custom: { scale: 1, x: 0, y: 0, z: 0, rot: 0 },
     isMuted: true,
-    volume: 100
+    volume: 100,
+    computedVol: 100,
+    screenPos: { x: 0, y: 0, z: 0 }
   }));
 
   rebuildDOM();
@@ -210,7 +248,7 @@ function rebuildDOM() {
     tile.addEventListener('dblclick', (e) => {
       e.stopPropagation();
       focusScreen(i);
-      camZ = 420;
+      camZ = 450;
     });
 
     s.el = tile;
@@ -220,23 +258,24 @@ function rebuildDOM() {
 
   applyLayout();
   updateUILists();
+  applyVisualFX();
 }
 
-// ── Dynamic 3D Layout Engine (Adaptive columns & rows — NO stacking) ───────
+// ── Dynamic 3D Layout Engine (Calculates adaptive non-overlapping grids) ──
 function applyLayout() {
   const n = screens.length;
   if (n === 0) return;
 
-  // Determine optimal columns & rows adaptively
+  // Calculate dynamic columns based on screen count
   let cols = 3;
   if (n <= 2) cols = n;
-  else if (n <= 6) cols = 3;
-  else if (n <= 8) cols = 4;
+  else if (n <= 4) cols = 2;
+  else if (n <= 9) cols = 3;
   else if (n <= 12) cols = 4;
   else cols = 5;
 
   const rows = Math.ceil(n / cols);
-  const scaleMod = n > 8 ? 0.88 : (n > 12 ? 0.76 : 1.0);
+  const scaleMod = n > 9 ? 0.85 : 1.0;
 
   screens.forEach((s, i) => {
     if (!s.el) return;
@@ -250,13 +289,14 @@ function applyLayout() {
       const colOffset = col - (cols - 1) / 2;
       const rowOffset = row - (rows - 1) / 2;
 
-      const angleY = colOffset * (cols > 3 ? 20 : 26) + c.rot;
-      const angleX = -rowOffset * 10;
+      const angleY = colOffset * (cols > 3 ? 20 : 25) + c.rot;
+      const angleX = -rowOffset * 9;
 
-      const xOff = colOffset * (465 * scaleMod) + c.x;
-      const yOff = rowOffset * (285 * scaleMod) + c.y;
-      const zOff = -520 - Math.abs(colOffset) * 45 - Math.abs(rowOffset) * 25 + c.z;
+      const xOff = colOffset * (465 * screenSpacing * scaleMod) + c.x;
+      const yOff = rowOffset * (285 * screenSpacing * scaleMod) + c.y;
+      const zOff = -520 - Math.abs(colOffset) * (45 * screenSpacing) - Math.abs(rowOffset) * 25 + c.z;
 
+      s.screenPos = { x: xOff, y: yOff, z: zOff };
       t = `translate3d(${xOff}px,${yOff}px,${zOff}px) rotateY(${-angleY}deg) rotateX(${angleX}deg) scale(${c.scale * scaleMod})`;
 
     } else if (layout === 'flat') {
@@ -266,22 +306,29 @@ function applyLayout() {
       const colOffset = col - (cols - 1) / 2;
       const rowOffset = row - (rows - 1) / 2;
 
-      const xOff = colOffset * (460 * scaleMod) + c.x;
-      const yOff = rowOffset * (280 * scaleMod) + c.y;
+      const xOff = colOffset * (460 * screenSpacing * scaleMod) + c.x;
+      const yOff = rowOffset * (280 * screenSpacing * scaleMod) + c.y;
       const zOff = -500 + c.z;
 
+      s.screenPos = { x: xOff, y: yOff, z: zOff };
       t = `translate3d(${xOff}px,${yOff}px,${zOff}px) rotateY(${c.rot}deg) scale(${c.scale * scaleMod})`;
 
     } else if (layout === 'ring') {
       const baseAngle = (i / n) * 360 + ringSpinAngle + c.rot;
-      const radius = Math.max(680, n * 75) + c.z;
+      const radius = Math.max(680, n * 75 * screenSpacing) + c.z;
 
-      // Tier multiple rows if large count
       let yTier = 0;
       if (n > 8) {
-        const tier = i % 2 === 0 ? -120 : 120;
-        yTier = tier;
+        yTier = (i % 2 === 0 ? -130 : 130) * screenSpacing;
       }
+
+      // Convert polar to cartesian for spatial audio
+      const rad = (baseAngle * Math.PI) / 180;
+      s.screenPos = {
+        x: Math.sin(rad) * radius + c.x,
+        y: yTier + c.y,
+        z: -Math.cos(rad) * radius
+      };
 
       t = `rotateY(${baseAngle}deg) translateZ(${radius}px) translateY(${yTier + c.y}px) scale(${c.scale * scaleMod})`;
     }
@@ -290,58 +337,114 @@ function applyLayout() {
   });
 }
 
-// ── Silent Video Replacement ───────────────────────────────────────────────
-function silentlyCycleScreen(idx) {
-  if (!screens[idx]) return;
-  const currentIds = screens.map(s => s.vid.id);
-  const nextVid = YT.getNextResult(currentIds);
-  console.log(`[MitC] Silently replacing Screen #${idx+1} with: "${nextVid.title}" (${nextVid.id})`);
-  replaceScreenVideo(idx, nextVid);
-}
+// ── Spatial 3D Audio & Depth of Field Engine ────────────────────────────────
+function updateSpatialAudioAndDoF() {
+  if (screens.length === 0) return;
 
-function cycleScreen(idx) {
-  if (!screens[idx]) return;
-  const currentIds = screens.map(s => s.vid.id);
-  const nextVid = YT.getNextResult(currentIds);
-  replaceScreenVideo(idx, nextVid);
-  if (typeof toast === 'function') toast(`↻ Screen #${idx+1} swapped: ${nextVid.title.slice(0, 24)}...`);
-}
+  let minDistance = Infinity;
+  let closestIdx = -1;
+  const distances = [];
 
-function replaceScreenVideo(idx, newVid) {
-  const s = screens[idx];
-  if (!s || !s.el) return;
-  s.vid = newVid;
+  screens.forEach((s, idx) => {
+    if (!s.screenPos) return;
+    // Calculate distance relative to current camera position & zoom
+    const dx = s.screenPos.x - camX;
+    const dy = s.screenPos.y - camY;
+    const dz = s.screenPos.z - (-camZ);
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    distances.push(dist);
 
-  const badge = s.el.querySelector('.screen-badge');
-  if (badge) badge.textContent = `#${String(idx+1).padStart(2,'0')} · ${(newVid.ch || 'YouTube').slice(0, 16)}`;
-  const titleBar = s.el.querySelector('.screen-title-bar');
-  if (titleBar) titleBar.textContent = newVid.title || 'YouTube Feed';
+    if (dist < minDistance) {
+      minDistance = dist;
+      closestIdx = idx;
+    }
+  });
 
-  const iframe = s.el.querySelector('iframe');
-  if (iframe) {
-    iframe.src = YT.embedUrl(newVid.id, s.isMuted);
-  }
+  screens.forEach((s, idx) => {
+    const dist = distances[idx] || 500;
 
-  updateUILists();
-}
+    // 1. Spatial Audio Volume Calculation
+    if (spatialAudio.enabled && !s.isMuted && !masterMuted) {
+      let spatialFactor = 1.0;
 
-// ── YouTube postMessage Error Interceptor (Auto-cycles on error) ────────────
-window.addEventListener('message', e => {
-  if (!e.data || typeof e.data !== 'string') return;
-  let data;
-  try { data = JSON.parse(e.data); } catch { return; }
-  if (data.event === 'onError' || (data.info && typeof data.info === 'number' && [2, 5, 100, 101, 150].includes(data.info))) {
-    screens.forEach((s, idx) => {
-      const iframe = s.el && s.el.querySelector('iframe');
-      if (iframe && iframe.contentWindow === e.source) {
-        console.warn(`[MitC] Intercepted video error on Screen #${idx+1} — silently cycling`);
-        silentlyCycleScreen(idx);
+      if (spatialAudio.singlePriority) {
+        // Boost closest screen to 100%, attenuate others steeply
+        spatialFactor = idx === closestIdx ? 1.0 : Math.max(0.05, 1.0 - (dist - minDistance) / 400);
+      } else {
+        // Continuous spatial falloff based on separation slider
+        const normalized = (dist - minDistance) / (700 / Math.max(0.2, spatialAudio.separation));
+        spatialFactor = Math.max(0.1, 1.0 / (1.0 + normalized * spatialAudio.separation * 1.5));
       }
-    });
-  }
-});
 
-// ── Audio & Volume Mixer Controls ───────────────────────────────────────────
+      const effective = Math.round(((s.volume * masterVolume) / 100) * spatialFactor);
+      if (effective !== s.computedVol) {
+        s.computedVol = effective;
+        postMessageToScreen(idx, { event: 'command', func: 'setVolume', args: [effective] });
+      }
+    }
+
+    // 2. Depth of Field (DoF) Blur Calculation
+    if (visualFX.dofEnabled && s.el) {
+      const isFocusedTile = idx === focusedIdx;
+      if (isFocusedTile) {
+        s.el.style.filter = 'none';
+      } else {
+        const delta = Math.abs(dist - minDistance);
+        const blurPx = Math.min(visualFX.dofStrength, (delta / 450) * visualFX.dofStrength);
+        s.el.style.filter = blurPx > 0.6 ? `blur(${blurPx.toFixed(1)}px)` : 'none';
+      }
+    } else if (s.el && s.el.style.filter) {
+      s.el.style.filter = 'none';
+    }
+  });
+}
+
+// ── Visual FX System ───────────────────────────────────────────────────────
+function applyVisualFX() {
+  document.body.className = '';
+  if (isUiHidden) document.body.classList.add('ui-hidden');
+
+  if (visualFX.theme === 'green-vector') {
+    document.body.classList.add('fx-green-vector');
+  } else if (visualFX.theme === 'amber-tactical') {
+    document.body.classList.add('fx-amber-tactical');
+  } else if (visualFX.theme === 'cyan-holo') {
+    document.body.classList.add('fx-cyan-holo');
+  } else if (visualFX.theme === 'synthwave') {
+    document.body.classList.add('fx-synthwave');
+  }
+
+  // Scanlines toggle
+  document.documentElement.style.setProperty(
+    '--scanline-opacity',
+    visualFX.scanlinesEnabled ? visualFX.scanlineOpacity : 0
+  );
+
+  // Floor grid brightness
+  const grid = document.querySelector('.floor-grid');
+  if (grid) grid.style.opacity = visualFX.floorGridBrightness;
+}
+
+function setVisualTheme(theme) {
+  visualFX.theme = theme;
+  applyVisualFX();
+}
+
+function setScreenSpacing(val) {
+  screenSpacing = Math.max(0.4, Math.min(2.0, parseFloat(val)));
+  applyLayout();
+}
+
+// ── Hide / Show Interface ──────────────────────────────────────────────────
+function toggleHideUI() {
+  isUiHidden = !isUiHidden;
+  document.body.classList.toggle('ui-hidden', isUiHidden);
+  const restoreBtn = document.getElementById('ui-restore-btn');
+  if (restoreBtn) restoreBtn.style.display = isUiHidden ? 'flex' : 'none';
+  toast(isUiHidden ? 'UI Hidden (Press [H] or ESC to restore)' : 'UI Restored');
+}
+
+// ── Audio & Volume Controls (Respects Solo Mode) ────────────────────────────
 function unmuteScreen(idx) {
   const s = screens[idx];
   if (!s) return;
@@ -400,13 +503,25 @@ function setMasterVolume(vol) {
   updateUILists();
 }
 
+// Master Mute respects Solo Mode
 function toggleMasterMute() {
   masterMuted = !masterMuted;
-  screens.forEach((s, i) => {
-    if (masterMuted) muteScreen(i);
-    else if (i === 0 || i === focusedIdx) unmuteScreen(i);
-  });
-  if (typeof toast === 'function') toast(masterMuted ? '🔇 ALL SCREENS MUTED' : '🔊 AUDIO UNMUTED');
+  if (masterMuted) {
+    screens.forEach((s, i) => muteScreen(i));
+    toast('🔇 ALL SCREENS MUTED');
+  } else {
+    if (soloAudioMode) {
+      const target = focusedIdx !== null ? focusedIdx : 0;
+      screens.forEach((s, i) => {
+        if (i === target) unmuteScreen(i);
+        else muteScreen(i);
+      });
+      toast(`🔊 SOLO AUDIO ACTIVE (Screen #${target+1})`);
+    } else {
+      screens.forEach((s, i) => unmuteScreen(i));
+      toast('🔊 MULTI-STREAM AUDIO ACTIVE');
+    }
+  }
   updateUILists();
 }
 
@@ -439,6 +554,57 @@ function postMessageToScreen(idx, data) {
   }
 }
 
+// ── Silent Video Replacement ───────────────────────────────────────────────
+function silentlyCycleScreen(idx) {
+  if (!screens[idx]) return;
+  const currentIds = screens.map(s => s.vid.id);
+  const nextVid = YT.getNextResult(currentIds);
+  console.log(`[MitC] Silently replacing Screen #${idx+1} with: "${nextVid.title}" (${nextVid.id})`);
+  replaceScreenVideo(idx, nextVid);
+}
+
+function cycleScreen(idx) {
+  if (!screens[idx]) return;
+  const currentIds = screens.map(s => s.vid.id);
+  const nextVid = YT.getNextResult(currentIds);
+  replaceScreenVideo(idx, nextVid);
+  if (typeof toast === 'function') toast(`↻ Screen #${idx+1} swapped: ${nextVid.title.slice(0, 24)}...`);
+}
+
+function replaceScreenVideo(idx, newVid) {
+  const s = screens[idx];
+  if (!s || !s.el) return;
+  s.vid = newVid;
+
+  const badge = s.el.querySelector('.screen-badge');
+  if (badge) badge.textContent = `#${String(idx+1).padStart(2,'0')} · ${(newVid.ch || 'YouTube').slice(0, 16)}`;
+  const titleBar = s.el.querySelector('.screen-title-bar');
+  if (titleBar) titleBar.textContent = newVid.title || 'YouTube Feed';
+
+  const iframe = s.el.querySelector('iframe');
+  if (iframe) {
+    iframe.src = YT.embedUrl(newVid.id, s.isMuted);
+  }
+
+  updateUILists();
+}
+
+// YouTube postMessage Error Interceptor (Auto-cycles on error)
+window.addEventListener('message', e => {
+  if (!e.data || typeof e.data !== 'string') return;
+  let data;
+  try { data = JSON.parse(e.data); } catch { return; }
+  if (data.event === 'onError' || (data.info && typeof data.info === 'number' && [2, 5, 100, 101, 150].includes(data.info))) {
+    screens.forEach((s, idx) => {
+      const iframe = s.el && s.el.querySelector('iframe');
+      if (iframe && iframe.contentWindow === e.source) {
+        console.warn(`[MitC] Intercepted video error on Screen #${idx+1} — silently cycling`);
+        silentlyCycleScreen(idx);
+      }
+    });
+  }
+});
+
 // ── Focus & Camera ─────────────────────────────────────────────────────────
 function focusScreen(idx) {
   focusedIdx = idx;
@@ -446,7 +612,7 @@ function focusScreen(idx) {
 
   const vp = document.getElementById('viewport');
   if (vp && cameraMode === 'chair') {
-    const cols = screens.length <= 2 ? screens.length : (screens.length <= 8 ? 4 : 5);
+    const cols = screens.length <= 2 ? screens.length : (screens.length <= 9 ? 3 : 4);
     const col = idx % cols;
     const colOffset = col - (cols - 1) / 2;
     const angleY = colOffset * 22;
@@ -468,7 +634,7 @@ function unfocus() {
 window.addEventListener('click', e => {
   if (focusedIdx !== null &&
       !e.target.closest('.holo-screen') &&
-      !e.target.closest('.side-panel,.top-hud,.pills-bar,.bottom-bar')) {
+      !e.target.closest('.side-panel,.top-hud,.pills-bar,.bottom-bar,#cinematic-overlay')) {
     unfocus();
   }
 });
@@ -502,6 +668,7 @@ function toggleRingSpin() {
 }
 
 function resetLayout() {
+  screenSpacing = 1.0;
   screens.forEach(s => { s.custom = { scale: 1, x: 0, y: 0, z: 0, rot: 0 }; });
   applyLayout();
 }
@@ -512,7 +679,9 @@ function addScreen(vid) {
     vid,
     custom: { scale: 1, x: 0, y: 0, z: 0, rot: 0 },
     isMuted: true,
-    volume: 100
+    volume: 100,
+    computedVol: 100,
+    screenPos: { x: 0, y: 0, z: 0 }
   });
   rebuildDOM();
 }
@@ -533,6 +702,9 @@ function updateCustom(idx, prop, val) {
 function saveLayout() {
   const data = {
     layout,
+    screenSpacing,
+    visualFX,
+    spatialAudio,
     screens: screens.map(s => ({ vid: s.vid, custom: s.custom, volume: s.volume }))
   };
   localStorage.setItem('mitc_layout', JSON.stringify(data));
@@ -544,13 +716,19 @@ function loadLayout() {
   try {
     const data = JSON.parse(raw);
     layout = data.layout || 'dome';
+    if (data.screenSpacing) screenSpacing = data.screenSpacing;
+    if (data.visualFX) Object.assign(visualFX, data.visualFX);
+    if (data.spatialAudio) Object.assign(spatialAudio, data.spatialAudio);
     screens = data.screens.map(s => ({
       vid: s.vid,
       custom: s.custom,
       isMuted: true,
-      volume: s.volume || 100
+      volume: s.volume || 100,
+      computedVol: 100,
+      screenPos: { x: 0, y: 0, z: 0 }
     }));
     rebuildDOM();
+    applyVisualFX();
     return true;
   } catch (e) { return false; }
 }
@@ -668,7 +846,193 @@ function updateUILists() {
   }
 }
 
-function glitch(ms = 350) {
+// ── 🎬 CINEMATIC EXPERIENCES (Options 1–4) ──────────────────────────────────
+async function launchCinematic(optionType, topic) {
+  if (isCinematicRunning) return;
+  isCinematicRunning = true;
+
+  const overlay = document.getElementById('cinematic-overlay');
+  const banner = document.getElementById('cinematic-banner');
+  if (overlay) overlay.style.display = 'flex';
+
+  toast(`🎬 LAUNCHING CINEMATIC EXPERIENCE: OPTION ${optionType}`);
+
+  // Fetch 15 video queue for the cinematic experience
+  const vids15 = await YT.getCinematic15(topic || YT.currentQuery || 'space');
+  loadScreens(vids15);
+  muteAllScreensQuiet();
+
+  let isCancelled = false;
+  cinematicCancelFn = () => {
+    isCancelled = true;
+    isCinematicRunning = false;
+    if (overlay) overlay.style.display = 'none';
+    resetCam();
+    unfocus();
+    toast('Cinematic exited');
+  };
+
+  const vp = document.getElementById('viewport');
+
+  // Option 1: DRAMATIC ZOOM OUT
+  if (optionType === 1) {
+    if (banner) banner.textContent = 'DRAMATIC PULL-BACK MATRIX IGNITION';
+    setLayout('dome');
+
+    // Hide all screens initially
+    screens.forEach(s => { if (s.el) s.el.style.opacity = '0'; });
+
+    // Focus center screen (#0)
+    const centerIdx = Math.floor(screens.length / 2);
+    if (screens[centerIdx] && screens[centerIdx].el) {
+      screens[centerIdx].el.style.opacity = '1';
+      unmuteScreen(centerIdx);
+    }
+
+    // Start extreme close-up
+    let currentZ = 520;
+    let pitch = 0;
+    vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${currentZ}px)`;
+
+    const startTime = performance.now();
+    const duration = 12000; // 12 seconds
+
+    function animateZoomOut(now) {
+      if (isCancelled) return;
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 0.5 - Math.cos(progress * Math.PI) / 2; // smooth ease in-out
+
+      currentZ = 520 - ease * 880; // from +520 to -360
+      pitch = Math.sin(progress * Math.PI) * 12; // subtle dynamic tilt
+      vp.style.transform = `translate3d(0,0,0) rotateX(${pitch}deg) rotateY(0deg) translateZ(${currentZ}px)`;
+
+      // Progressively reveal surrounding screens in expanding concentric rings
+      const screensToReveal = Math.floor(progress * screens.length);
+      for (let i = 0; i < screens.length; i++) {
+        if (screens[i] && screens[i].el) {
+          if (i <= screensToReveal || i === centerIdx) {
+            screens[i].el.style.opacity = '1';
+            if (screens[i].isMuted && progress > 0.45 && !soloAudioMode) {
+              unmuteScreen(i);
+            }
+          }
+        }
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animateZoomOut);
+      } else {
+        isCinematicRunning = false;
+        if (overlay) overlay.style.display = 'none';
+        toast('Cinematic complete: 15-Stream Command Deck Active');
+      }
+    }
+    requestAnimationFrame(animateZoomOut);
+
+  // Option 2: 360° VORTEX WARP
+  } else if (optionType === 2) {
+    if (banner) banner.textContent = '360° CYLINDRICAL VORTEX WARP';
+    setLayout('ring');
+    screens.forEach(s => { if (s.el) s.el.style.opacity = '1'; });
+
+    let angle = 0;
+    let speed = 2.4;
+    let curY = 240;
+    const startTime = performance.now();
+    const duration = 10000;
+
+    function animateVortex(now) {
+      if (isCancelled) return;
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+
+      speed = 2.4 * (1 - progress * 0.85); // start fast, ease down
+      angle = (angle + speed) % 360;
+      curY = 240 - progress * 240; // glide down from high angle
+
+      vp.style.transform = `translate3d(0,${curY}px,0) rotateX(16deg) rotateY(${angle}deg) translateZ(80px)`;
+
+      if (progress < 1) {
+        requestAnimationFrame(animateVortex);
+      } else {
+        isCinematicRunning = false;
+        if (overlay) overlay.style.display = 'none';
+        toast('Vortex warp locked into orbital glide');
+      }
+    }
+    requestAnimationFrame(animateVortex);
+
+  // Option 3: TACTICAL MATRIX DEPLOYMENT (GRID INVASION)
+  } else if (optionType === 3) {
+    if (banner) banner.textContent = 'TACTICAL GREEN MATRIX DEPLOYMENT';
+    setVisualTheme('green-vector');
+    setLayout('flat');
+
+    screens.forEach(s => { if (s.el) { s.el.style.opacity = '0'; s.el.style.transform += ' translateY(-600px)'; } });
+
+    let count = 0;
+    const interval = setInterval(() => {
+      if (isCancelled || count >= screens.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          if (!isCancelled) {
+            isCinematicRunning = false;
+            if (overlay) overlay.style.display = 'none';
+            toast('Tactical matrix fully operational');
+          }
+        }, 1200);
+        return;
+      }
+      if (screens[count] && screens[count].el) {
+        screens[count].el.style.opacity = '1';
+        applyLayout();
+      }
+      count++;
+    }, 220);
+
+  // Option 4: SPOTLIGHT ORBITAL FLY-AROUND
+  } else if (optionType === 4) {
+    if (banner) banner.textContent = 'SPOTLIGHT ACOUSTIC FLY-AROUND';
+    setLayout('dome');
+    const startTime = performance.now();
+    const duration = 14000;
+
+    function animateFlyAround(now) {
+      if (isCancelled) return;
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+
+      // Figure-8 dynamic trajectory
+      const t = (elapsed / 1000) * 1.2;
+      const curX = Math.sin(t) * 280;
+      const curY = Math.sin(t * 2) * 90;
+      const curRotY = Math.cos(t) * 28;
+      const curRotX = -Math.sin(t * 2) * 12;
+
+      vp.style.transform = `translate3d(${curX}px,${curY}px,0) rotateX(${curRotX}deg) rotateY(${curRotY}deg) translateZ(120px)`;
+
+      if (progress < 1) {
+        requestAnimationFrame(animateFlyAround);
+      } else {
+        isCinematicRunning = false;
+        if (overlay) overlay.style.display = 'none';
+        toast('Spotlight flight path complete');
+      }
+    }
+    requestAnimationFrame(animateFlyAround);
+  }
+}
+
+function muteAllScreensQuiet() {
+  screens.forEach((s, idx) => {
+    s.isMuted = true;
+    postMessageToScreen(idx, { event: 'command', func: 'mute', args: [] });
+    updateScreenAudioUI(idx);
+  });
+}
+
+function glitch(ms = 320) {
   screens.forEach(s => {
     if (!s.el) return;
     const rx = (Math.random() - 0.5) * 35, ry = (Math.random() - 0.5) * 35;
