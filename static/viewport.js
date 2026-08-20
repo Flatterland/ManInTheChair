@@ -31,7 +31,7 @@ let spatialAudio = {
 // UI Visibility state
 let isUiHidden = false;
 
-// Camera & 3D space state
+// Camera & 3D space state (ONLY moves when mouse button is clicked and held)
 let draggingLeft = false, draggingRight = false;
 let mx = 0, my = 0;
 let rotX = 0, rotY = 0, tRotX = 0, tRotY = 0;
@@ -61,6 +61,7 @@ function initViewport() {
     mx = e.clientX; my = e.clientY;
   });
 
+  // ONLY rotate or pan when mouse button is actively held down (NO hover tracking)
   window.addEventListener('mousemove', e => {
     const dx = e.clientX - mx, dy = e.clientY - my;
     mx = e.clientX; my = e.clientY;
@@ -72,9 +73,6 @@ function initViewport() {
     } else if (draggingRight) {
       tCamX += dx * 0.85;
       tCamY += dy * 0.85;
-    } else if (cameraMode === 'chair' && focusedIdx === null && !isCinematicRunning) {
-      tRotY = (e.clientX / window.innerWidth - 0.5) * 2 * 16;
-      tRotX = -(e.clientY / window.innerHeight - 0.5) * 2 * 11;
     }
   });
 
@@ -130,10 +128,10 @@ function loop() {
       orbitAngle = (orbitAngle + 0.35) % 360;
       vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(15deg) rotateY(${orbitAngle}deg) translateZ(-60px)`;
     } else if (focusedIdx === null) {
-      rotX += (tRotX - rotX) * 0.08;
-      rotY += (tRotY - rotY) * 0.08;
-      camX += (tCamX - camX) * 0.1;
-      camY += (tCamY - camY) * 0.1;
+      rotX += (tRotX - rotX) * 0.12;
+      rotY += (tRotY - rotY) * 0.12;
+      camX += (tCamX - camX) * 0.12;
+      camY += (tCamY - camY) * 0.12;
       vp.style.transform = `translate3d(${camX}px,${camY}px,0) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(${camZ}px)`;
     }
   }
@@ -267,6 +265,7 @@ function rebuildDOM() {
 
 // ── Dynamic 3D Layout Engine ───────────────────────────────────────────────
 function applyLayout() {
+  if (isCinematicRunning) return; // Do not disturb cinematic coordinates
   const n = screens.length;
   if (n === 0) return;
 
@@ -400,6 +399,8 @@ function updateSpatialAudioAndDoF() {
 
 // ── Visual FX System ───────────────────────────────────────────────────────
 function applyVisualFX() {
+  if (isCinematicRunning) return; // Do not wipe cinematic blackout styles
+
   document.body.className = '';
   if (isUiHidden) document.body.classList.add('ui-hidden');
 
@@ -419,7 +420,10 @@ function applyVisualFX() {
   );
 
   const grid = document.querySelector('.floor-grid');
-  if (grid) grid.style.opacity = visualFX.floorGridBrightness;
+  if (grid) {
+    grid.style.display = 'block';
+    grid.style.opacity = visualFX.floorGridBrightness;
+  }
 }
 
 function setVisualTheme(theme) {
@@ -851,8 +855,13 @@ async function launchCinematic(optionType, topic) {
   const windupTimer = document.getElementById('windup-timer-text');
   const windupFill = document.getElementById('windup-progress-fill');
   const vp = document.getElementById('viewport');
+  const grid = document.querySelector('.floor-grid');
 
-  // Hardcode 100% pure black void across both html and body
+  // Hardcode 100% pure black void across entire page and DOM
+  document.documentElement.style.background = '#000000';
+  document.body.style.background = '#000000';
+  document.body.style.backgroundImage = 'none';
+  if (grid) grid.style.display = 'none';
   document.documentElement.classList.add('cinematic-blackout');
   document.body.classList.add('cinematic-blackout');
 
@@ -874,6 +883,10 @@ async function launchCinematic(optionType, topic) {
     isCinematicRunning = false;
     document.documentElement.classList.remove('cinematic-blackout');
     document.body.classList.remove('cinematic-blackout', 'grid-visible');
+    document.documentElement.style.background = '';
+    document.body.style.background = '';
+    document.body.style.backgroundImage = '';
+    if (grid) grid.style.display = 'block';
     if (overlay) overlay.style.display = 'none';
     if (windupBox) windupBox.style.display = 'none';
     screens.forEach(s => {
@@ -884,6 +897,7 @@ async function launchCinematic(optionType, topic) {
     });
     resetCam();
     unfocus();
+    applyVisualFX();
     applyLayout();
     toast('Cinematic exited');
   };
