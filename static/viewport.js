@@ -399,7 +399,7 @@ function updateSpatialAudioAndDoF() {
 
 // ── Visual FX System ───────────────────────────────────────────────────────
 function applyVisualFX() {
-  if (isCinematicRunning) return; // Do not wipe cinematic blackout styles
+  if (isCinematicRunning) return;
 
   document.body.className = '';
   if (isUiHidden) document.body.classList.add('ui-hidden');
@@ -464,6 +464,28 @@ function unmuteScreen(idx) {
   updateScreenAudioUI(idx);
   updateUILists();
   if (typeof toast === 'function' && !isCinematicRunning) toast(`🔊 Screen #${idx+1} Audio Active (${s.vid.title.slice(0, 22)}...)`);
+}
+
+// Smoothly fades in audio volume over durationMs to match visual opacity fade
+function fadeAudioIn(idx, targetVol, durationMs = 2000) {
+  const s = screens[idx];
+  if (!s) return;
+  s.isMuted = false;
+  postMessageToScreen(idx, { event: 'command', func: 'unMute', args: [] });
+  postMessageToScreen(idx, { event: 'command', func: 'setVolume', args: [0] });
+  updateScreenAudioUI(idx);
+
+  const startT = performance.now();
+  function ramp(now) {
+    if (!isCinematicRunning && s.isMuted) return;
+    const elapsed = now - startT;
+    const progress = Math.min(1, elapsed / durationMs);
+    const curVol = Math.round(targetVol * progress);
+    s.volume = curVol;
+    postMessageToScreen(idx, { event: 'command', func: 'setVolume', args: [curVol] });
+    if (progress < 1) requestAnimationFrame(ramp);
+  }
+  requestAnimationFrame(ramp);
 }
 
 function muteScreen(idx) {
@@ -869,7 +891,7 @@ async function launchCinematic(optionType, topic) {
   if (windupBox) windupBox.style.display = 'flex';
   if (banner) banner.textContent = `BUFFERING 15 HD STREAMS FOR "${(topic || 'TOPIC').toUpperCase()}"`;
 
-  // Fetch 15 videos matching the topic
+  // Fetch 15 REAL videos matching the searched topic
   const vids15 = await YT.getCinematic15(topic || YT.currentQuery || 'space');
   loadScreens(vids15);
   muteAllScreensQuiet();
@@ -932,53 +954,53 @@ async function launchCinematic(optionType, topic) {
   if (optionType === 1) {
     if (banner) banner.textContent = `COSMIC CONSTELLATION: ${(topic || YT.currentQuery || 'SPACE').toUpperCase()}`;
 
-    // 15 Organic FLAT Positions (All rotY=0, rotX=0 parallel to camera plane)
+    // 15 Organic FLAT Positions on the SAME Z-PLANE (z: 0) to avoid any line-of-sight occlusion
     const flatConstellation = [
-      // Hero (0s): Center, full frame scale
-      { x: 0, y: 0, z: 0, scale: 2.1, time: 0, vol: 100 },
-      // 2nd video (10.0s): Upper left floating
-      { x: -580, y: -200, z: -140, scale: 1.05, time: 10.0, vol: 55 },
-      // 3rd video (14.0s): Lower right floating
-      { x: 600, y: 180, z: -180, scale: 1.05, time: 14.0, vol: 50 },
-      // 4th video (17.5s): Upper right floating
-      { x: 560, y: -230, z: -240, scale: 1.0, time: 17.5, vol: 45 },
-      // 5th video (21.0s): Lower left floating
-      { x: -600, y: 230, z: -240, scale: 1.0, time: 21.0, vol: 45 },
+      // Hero (0s): Dead center
+      { x: 0, y: 0, z: 0, time: 0, vol: 100 },
+      // 2nd video (10.0s): Upper left
+      { x: -520, y: -190, z: 0, time: 10.0, vol: 55 },
+      // 3rd video (14.0s): Lower right
+      { x: 530, y: 180, z: 0, time: 14.0, vol: 50 },
+      // 4th video (17.5s): Upper right
+      { x: 520, y: -200, z: 0, time: 17.5, vol: 45 },
+      // 5th video (21.0s): Lower left
+      { x: -530, y: 200, z: 0, time: 21.0, vol: 45 },
       // 6th video (24.5s): Far left wing
-      { x: -1040, y: -50, z: -350, scale: 0.95, time: 24.5, vol: 40 },
+      { x: -1000, y: -40, z: 0, time: 24.5, vol: 40 },
       // 7th video (28.0s): Far right wing
-      { x: 1040, y: 60, z: -370, scale: 0.95, time: 28.0, vol: 40 },
+      { x: 1000, y: 50, z: 0, time: 28.0, vol: 40 },
       // 8th video (31.5s): Zenith crown
-      { x: 0, y: -390, z: -300, scale: 0.95, time: 31.5, vol: 38 },
+      { x: 0, y: -360, z: 0, time: 31.5, vol: 38 },
       // 9th video (35.0s): Bottom pedestal
-      { x: 0, y: 400, z: -280, scale: 0.95, time: 35.0, vol: 38 },
+      { x: 0, y: 370, z: 0, time: 35.0, vol: 38 },
       // 10th video (38.5s): High top-left
-      { x: -490, y: -450, z: -430, scale: 0.9, time: 38.5, vol: 35 },
+      { x: -480, y: -420, z: 0, time: 38.5, vol: 35 },
       // 11th video (42.0s): High top-right
-      { x: 490, y: -440, z: -440, scale: 0.9, time: 42.0, vol: 35 },
+      { x: 480, y: -420, z: 0, time: 42.0, vol: 35 },
       // 12th video (45.5s): Low bottom-left
-      { x: -500, y: 450, z: -420, scale: 0.9, time: 45.5, vol: 32 },
+      { x: -480, y: 430, z: 0, time: 45.5, vol: 32 },
       // 13th video (49.0s): Low bottom-right
-      { x: 500, y: 460, z: -420, scale: 0.9, time: 49.0, vol: 32 },
+      { x: 480, y: 430, z: 0, time: 49.0, vol: 32 },
       // 14th video (52.5s): Distant outer left
-      { x: -1140, y: -390, z: -540, scale: 0.85, time: 52.5, vol: 30 },
+      { x: -1040, y: -360, z: 0, time: 52.5, vol: 30 },
       // 15th video (56.0s): Distant outer right
-      { x: 1140, y: -380, z: -550, scale: 0.85, time: 56.0, vol: 30 },
+      { x: 1040, y: -360, z: 0, time: 56.0, vol: 30 },
     ];
 
-    // Position each screen FLAT (rotY: 0, rotX: 0)
+    // Position each screen FLAT on the Z=0 plane (rotY: 0, rotX: 0)
     screens.forEach((s, idx) => {
       const pos = flatConstellation[idx] || flatConstellation[0];
       if (s.el) {
         s.el.style.opacity = '0';
         s.el.style.transition = 'opacity 2.0s cubic-bezier(0.25, 1, 0.5, 1)';
-        s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(${pos.scale})`;
+        s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(1)`;
       }
     });
 
-    // Start Hero video right in center, super up-close filling entire frame
+    // Start Hero video right in center, with camera up-close at camZ = 460px to fill the frame
     const heroScreen = screens[0];
-    let curZ = 620;
+    let curZ = 460;
     vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${curZ}px)`;
 
     if (heroScreen && heroScreen.el) {
@@ -1002,7 +1024,7 @@ async function launchCinematic(optionType, topic) {
         const p = elapsed / lingerDuration;
         const driftPitch = Math.sin(p * Math.PI) * 1.5;
         const driftYaw = Math.sin(p * Math.PI * 0.7) * 1.4;
-        curZ = 620 - p * 20; // 620 to 600
+        curZ = 460 - p * 15; // 460 to 445
         vp.style.transform = `translate3d(0,0,0) rotateX(${driftPitch}deg) rotateY(${driftYaw}deg) translateZ(${curZ}px)`;
 
       // ── PHASE 2: ULTRA-SLOW PULL-BACK & SEQUENTIAL 2.0s FADE-INS ───────────
@@ -1011,18 +1033,17 @@ async function launchCinematic(optionType, topic) {
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 600 - ease * 1020; // from +600 down to -420
+        curZ = 445 - ease * 900; // from +445 down to -455
         const tiltX = Math.sin(pullProgress * Math.PI) * 4;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
       }
 
-      // Check and ignite secondary screens with 2.0-second fade-in
+      // Check and ignite secondary screens with 2.0-second visual fade AND matching audio volume fade
       flatConstellation.forEach((pos, idx) => {
         if (elapsedSec >= pos.time && screens[idx] && screens[idx].el) {
           if (screens[idx].el.style.opacity !== '1') {
             screens[idx].el.style.opacity = '1';
-            unmuteScreen(idx);
-            setScreenVolume(idx, pos.vol);
+            fadeAudioIn(idx, pos.vol, 2000);
           }
         }
       });

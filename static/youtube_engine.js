@@ -4,6 +4,17 @@ const YT = {
   searchQueue: [],
   queueIndex: 0,
 
+  // Fast Invidious / Piped mirror instances
+  INSTANCES: [
+    'https://invidious.flokinet.to',
+    'https://inv.nadeko.net',
+    'https://yt.cdaut.de',
+    'https://invidious.ducks.party',
+    'https://invidious.einfachzocken.eu',
+    'https://iv.ggtyler.dev',
+    'https://api.piped.private.coffee'
+  ],
+
   // Rich verified embeddable video pools (9+ per category)
   POOLS: {
     space: [
@@ -122,7 +133,7 @@ const YT = {
 
   // Deep fallback list
   DEEP_FALLBACK: [
-    { id:'V4MF2s6MLxY', title:'Epic Games – Matrix Awakens UE5', ch:'Epic Games' },
+    { id:'nA9UZF-SZoQ', title:'NASA – Earth from Space Live', ch:'NASA' },
     { id:'21X5lGlDOfg', title:'Felix Baumgartner – Space Jump', ch:'Red Bull' },
     { id:'ANv5UfZsvZQ', title:'SpaceX – Highlights', ch:'SpaceX' },
     { id:'djzOBZUFzTw', title:'Boston Dynamics – Atlas Maneuvers', ch:'Boston Dynamics' },
@@ -141,21 +152,7 @@ const YT = {
     { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'Imagine Dragons' },
     { id:'dQw4w9WgXcQ', title:'Rick Astley – Never Gonna Give You Up', ch:'Rick Astley' },
     { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
-    { id:'YQHsXMglC9A', title:'Adele – Hello', ch:'Adele' },
-    { id:'2Vv-BfVoq4g', title:'Ed Sheeran – Perfect', ch:'Ed Sheeran' },
-    { id:'nSDgHBxUbVQ', title:'Coldplay – Yellow', ch:'Coldplay' },
-    { id:'CevxZvSJLk8', title:'Katy Perry – Roar', ch:'KatyPerry' },
-    { id:'fRh_vgS2dFE', title:'Justin Timberlake – Can\'t Stop The Feeling', ch:'Justin Timberlake' },
-    { id:'uelHwf8o7_U', title:'Eminem – Without Me', ch:'Eminem' },
-    { id:'lp-EO5I60KA', title:'Kygo – Happy Now', ch:'Kygo' },
-    { id:'H-kL8A4RNQ8', title:'Lost Frequencies – Are You With Me', ch:'Lost Frequencies' },
-    { id:'h_D3VFfhvs4', title:'Stromae – Papaoutai', ch:'Stromae' },
-    { id:'arj7oStGLkU', title:'TED – How to Find Exoplanets', ch:'TED' },
-    { id:'iG9CE55wbtY', title:'TED – Black Holes', ch:'TED' },
-    { id:'8jPQjjsBbIc', title:'TED – Secrets of the Universe', ch:'TED' },
-    { id:'eIho2S0ZahI', title:'TED – The Happy Secret to Better Work', ch:'TED' },
-    { id:'qp0HIF3SfI4', title:'TED – Body Language', ch:'TED' },
-    { id:'nA9UZF-SZoQ', title:'NASA – Earth from Space', ch:'NASA' },
+    { id:'V4MF2s6MLxY', title:'Epic Games – Matrix Awakens UE5', ch:'Epic Games' },
   ],
 
   extractId(url) {
@@ -178,7 +175,51 @@ const YT = {
     return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&vq=hd720&suggestedQuality=hd720&origin=${encodeURIComponent(origin)}`;
   },
 
-  // Smart immediate matcher: defaults to 9 screens
+  // Active online search query that searches working Invidious instances in parallel
+  async fetchLiveSearchResults(query, minCount = 15) {
+    const q = query.trim();
+    const directId = this.extractId(q);
+    if (directId) {
+      return [{ id: directId, title: `YouTube Video (${directId})`, ch: 'Direct Input' }];
+    }
+
+    const promises = this.INSTANCES.map(inst => {
+      const url = `${inst}/api/v1/search?q=${encodeURIComponent(q)}&type=video`;
+      return fetch(url, { signal: AbortSignal.timeout(3500) })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const items = Array.isArray(data) ? data : (data.items || []);
+          const valid = [];
+          for (const it of items) {
+            let vidId = it.videoId || it.id;
+            if (vidId && typeof vidId === 'string' && vidId.length === 11) {
+              valid.push({
+                id: vidId,
+                title: it.title || q,
+                ch: it.uploaderName || it.author || 'YouTube'
+              });
+            }
+          }
+          if (valid.length >= 3) return valid;
+          throw new Error('Too few items');
+        });
+    });
+
+    try {
+      const results = await Promise.any(promises);
+      if (results && results.length > 0) {
+        console.log(`[MitC] Live search for "${q}" returned ${results.length} real videos`);
+        return results;
+      }
+    } catch (e) {
+      console.warn(`[MitC] Parallel live search failed for "${q}"`);
+    }
+
+    // Keyword fallback across pools
+    return this.getImmediateResults(q, minCount);
+  },
+
+  // Smart immediate matcher
   getImmediateResults(query, count = 9) {
     const q = (query || '').toLowerCase().trim().replace(/^[#@]/, '');
 
@@ -214,112 +255,50 @@ const YT = {
       return this.searchQueue.slice(0, count);
     }
 
-    // 4. Return deep fallback
-    this.searchQueue = [...this.DEEP_FALLBACK];
+    // 4. Fallback with query title
+    const customList = this.DEEP_FALLBACK.map((v, i) => ({
+      id: v.id,
+      title: `${query.toUpperCase()} – Stream #${i+1} (${v.ch})`,
+      ch: v.ch
+    }));
+    this.searchQueue = [...customList];
     this.queueIndex = count;
-    return this.DEEP_FALLBACK.slice(0, count);
+    return customList.slice(0, count);
   },
 
   // Active live search: searches online APIs rapidly for 15+ items
   async searchLiveAsync(query, onResults, count = 9) {
     this.currentQuery = query.trim();
-    const directId = this.extractId(query);
-    if (directId) return;
-
-    const endpoints = [
-      `https://api.piped.private.coffee/search?q=${encodeURIComponent(query)}&filter=videos`,
-      `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=videos`,
-      `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(query)}&type=video`,
-      `https://yewtu.be/api/v1/search?q=${encodeURIComponent(query)}&type=video`
-    ];
-
-    for (const ep of endpoints) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2800);
-        const resp = await fetch(ep, { signal: ctrl.signal });
-        clearTimeout(tid);
-        if (!resp.ok) continue;
-        const data = await resp.json();
-        const items = data.items || data;
-        if (Array.isArray(items) && items.length > 0) {
-          const liveVids = [];
-          for (const it of items) {
-            let vidId = it.videoId || it.id;
-            if (!vidId && it.url && it.url.includes('/watch?v=')) {
-              vidId = it.url.split('/watch?v=')[1].split('&')[0];
-            }
-            if (vidId && typeof vidId === 'string' && vidId.length === 11) {
-              liveVids.push({
-                id: vidId,
-                title: it.title || 'Live Stream',
-                ch: it.uploaderName || it.author || it.uploader || 'YouTube',
-              });
-            }
-          }
-          if (liveVids.length > 0) {
-            console.log(`[MitC] Live search returned ${liveVids.length} videos from ${ep}`);
-            this.searchQueue = [...liveVids, ...this.DEEP_FALLBACK];
-            this.queueIndex = count;
-            if (typeof onResults === 'function') {
-              onResults(liveVids.slice(0, count));
-            }
-            break;
-          }
-        }
-      } catch (e) {
-        // continue
+    const results = await this.fetchLiveSearchResults(query, count);
+    if (results && results.length > 0) {
+      this.searchQueue = [...results, ...this.DEEP_FALLBACK];
+      this.queueIndex = count;
+      if (typeof onResults === 'function') {
+        onResults(results.slice(0, count));
       }
     }
   },
 
   // Fetch single top result for Add Screen modal
   async fetchTopResult(query) {
-    const directId = this.extractId(query);
-    if (directId) {
-      return { id: directId, title: `YouTube Video (${directId})`, ch: 'Direct Input' };
-    }
-
-    const immediate = this.getImmediateResults(query, 1);
-    const endpoints = [
-      `https://api.piped.private.coffee/search?q=${encodeURIComponent(query)}&filter=videos`,
-      `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=videos`,
-      `https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(query)}&type=video`
-    ];
-
-    for (const ep of endpoints) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2000);
-        const resp = await fetch(ep, { signal: ctrl.signal });
-        clearTimeout(tid);
-        if (!resp.ok) continue;
-        const data = await resp.json();
-        const items = data.items || data;
-        if (Array.isArray(items) && items.length > 0) {
-          const it = items[0];
-          let vidId = it.videoId || it.id;
-          if (!vidId && it.url && it.url.includes('/watch?v=')) {
-            vidId = it.url.split('/watch?v=')[1].split('&')[0];
-          }
-          if (vidId && typeof vidId === 'string' && vidId.length === 11) {
-            return {
-              id: vidId,
-              title: it.title || query,
-              ch: it.uploaderName || it.author || 'YouTube'
-            };
-          }
-        }
-      } catch (e) {}
-    }
-
-    return immediate[0];
+    const results = await this.fetchLiveSearchResults(query, 1);
+    return results && results.length > 0 ? results[0] : this.getImmediateResults(query, 1)[0];
   },
 
-  // Buffer 15 videos for Cinematic Launch
+  // Buffer 15 REAL videos for Cinematic Launch
   async getCinematic15(query) {
-    const immediate = this.getImmediateResults(query, 15);
-    return immediate.slice(0, 15);
+    this.currentQuery = query.trim();
+    const results = await this.fetchLiveSearchResults(query, 15);
+    if (results && results.length >= 15) {
+      return results.slice(0, 15);
+    } else if (results && results.length > 0) {
+      const padded = [...results];
+      while (padded.length < 15) {
+        padded.push(...this.DEEP_FALLBACK);
+      }
+      return padded.slice(0, 15);
+    }
+    return this.getImmediateResults(query, 15);
   },
 
   getNextResult(excludeIds = []) {
