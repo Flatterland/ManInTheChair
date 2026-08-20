@@ -1,0 +1,690 @@
+
+:root {
+  --neon-cyan: #00f0ff;
+  --neon-amber: #ffb703;
+  --neon-pink: #ff007f;
+  --neon-green: #00ff88;
+  --neon-purple: #9d4edd;
+  --bg-deep: #050811;
+  --bg-panel: rgba(10, 16, 32, 0.94);
+  --border-cyan: rgba(0, 240, 255, 0.35);
+  --border-glow: rgba(0, 240, 255, 0.6);
+  --text-main: #e0f2fe;
+  --text-muted: #94a3b8;
+  --font-mono: 'SF Mono', 'Courier New', Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at 50% 50%, #0c1833 0%, #050811 100%);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  perspective: 1200px;
+}
+
+/* Three.js Canvas (Used in GPU Mode) */
+#webgl-canvas {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: none;
+  z-index: 1;
+}
+
+/* CSS 3D Viewport (Used in CPU / Software Mode) */
+#css3d-viewport {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
+  z-index: 10;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+/* Holographic Floor Grid */
+.floor-grid {
+  position: absolute;
+  width: 2600px;
+  height: 2600px;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: rotateX(90deg) translateZ(-350px);
+  opacity: 0.7;
+  pointer-events: none;
+  mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+}
+
+#screens-cluster {
+  position: relative;
+  width: 0; height: 0;
+  transform-style: preserve-3d;
+}
+
+/* Individual 3D Floating Video Hologram Screen (CSS 3D) */
+.holo-screen-3d {
+  position: absolute;
+  width: 380px;
+  height: 220px;
+  left: -190px;
+  top: -110px;
+  transform-style: preserve-3d;
+  background: rgba(5, 12, 28, 0.9);
+  border: 2px solid var(--border-cyan);
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.25), inset 0 0 20px rgba(0, 240, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
+}
+
+.holo-screen-3d:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 45px rgba(0, 240, 255, 0.55), inset 0 0 30px rgba(0, 240, 255, 0.3);
+}
+
+.holo-screen-3d.focused {
+  border-color: var(--neon-green) !important;
+  box-shadow: 0 0 60px rgba(0, 255, 136, 0.6), inset 0 0 30px rgba(0, 255, 136, 0.3) !important;
+}
+
+.screen-video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.screen-tag-badge {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  background: rgba(8, 14, 28, 0.85);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.screen-live-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: rgba(255, 0, 85, 0.2);
+  border: 1px solid #ff0055;
+  color: #ff0055;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.screen-caption-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(5, 12, 28, 0.95), transparent);
+  padding: 20px 10px 8px 10px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.screen-caption-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.screen-caption-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+/* Top Command Bar */
+.top-hud {
+  position: absolute;
+  top: 14px; left: 20px; right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 12px;
+  padding: 7px 16px;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+.brand-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px var(--neon-cyan));
+}
+
+.brand-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+}
+
+.brand-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Search Container */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 30px;
+  padding: 6px 16px;
+  width: 440px;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.2);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.search-container:focus-within {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.45);
+}
+
+.search-icon {
+  color: var(--neon-cyan);
+  font-size: 15px;
+}
+
+#search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--font-mono);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#search-input::placeholder {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+  border: none;
+  color: #050811;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+}
+
+/* System Controls */
+.system-controls {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+
+.hud-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hud-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.hud-btn.active {
+  background: var(--neon-cyan);
+  color: #050811;
+  font-weight: 800;
+  box-shadow: 0 0 14px var(--neon-cyan);
+}
+
+.hud-btn.render-toggle {
+  border-color: var(--neon-amber);
+  color: var(--neon-amber);
+}
+
+/* Trending Filter Pills */
+.trending-bar {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.trend-pill {
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.trend-pill:hover, .trend-pill.active {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Left Telemetry Feed HUD */
+.left-feed-panel {
+  position: absolute;
+  top: 120px;
+  left: 20px;
+  width: 290px;
+  max-height: calc(100vh - 190px);
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  overflow-y: auto;
+}
+
+.panel-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 6px;
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feed-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.feed-card:hover, .feed-card.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--neon-cyan);
+  transform: translateX(4px);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.3);
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.feed-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border-cyan);
+  object-fit: cover;
+}
+
+.feed-author {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-handle {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.feed-snippet {
+  font-size: 10px;
+  color: #cbd5e1;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Right Focus & Screen Adjuster Telemetry Panel */
+.right-focus-panel {
+  position: absolute;
+  top: 120px;
+  right: 20px;
+  width: 310px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 12px;
+  padding: 14px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.25);
+  animation: fadeIn 0.3s ease;
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.focus-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.focus-close-btn:hover {
+  color: white;
+}
+
+.audio-visualizer-box {
+  width: 100%;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px;
+}
+
+.eq-bar {
+  flex: 1;
+  background: linear-gradient(to top, var(--neon-cyan), #00ff88);
+  border-radius: 2px;
+  height: 20%;
+  transition: height 0.08s ease;
+}
+
+/* Screen Adjuster Controls Section */
+.adjuster-section {
+  border-top: 1px solid rgba(0, 240, 255, 0.2);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adjuster-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.control-slider-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  gap: 8px;
+}
+
+.control-slider-group input[type="range"] {
+  flex: 1;
+  accent-color: var(--neon-cyan);
+  cursor: pointer;
+}
+
+.action-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.action-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  padding: 5px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.action-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.action-btn.danger:hover {
+  background: rgba(255, 0, 85, 0.25);
+  border-color: #ff0055;
+  color: #ff0055;
+}
+
+/* Bottom Cockpit Status Deck */
+.bottom-cockpit-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cyan);
+  border-radius: 14px;
+  padding: 7px 20px;
+  z-index: 1000;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.cockpit-stat {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.cockpit-stat span {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.layout-picker {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.layout-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.layout-btn.active, .layout-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--neon-cyan);
+}
+
+/* Modal for Adding Screen */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.modal-card {
+  width: 420px;
+  background: var(--bg-panel);
+  border: 1px solid var(--neon-cyan);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-card input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-cyan);
+  border-radius: 8px;
+  padding: 10px;
+  color: white;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--font-mono);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Holographic Notification Banner */
+.holo-toast {
+  position: absolute;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(8, 14, 28, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  padding: 8px 20px;
+  border-radius: 24px;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+  z-index: 2000;
+  display: none;
+  letter-spacing: 0.5px;
+}
+
+input, button, .top-hud, .trending-bar, .left-feed-panel, .right-focus-panel, .bottom-cockpit-hud, .feed-card, .trend-pill, .hud-btn, .layout-btn, .search-btn, .action-btn {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
