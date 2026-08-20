@@ -1,5 +1,5 @@
 
-// Main Application Controller & HUD Orchestrator
+// Main Application Controller & HUD Orchestrator (100% In-Browser & GitHub Pages Ready)
 let isMasterMuted = true;
 let activePalette = 'cyan';
 let currentSelectedScreenIdx = null;
@@ -11,7 +11,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@OpenAI_Vision",
         "avatar": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&h=100&fit=crop",
         "text": "Autonomous bipedal robot neural locomotion testing in real-world unstructured terrain #AI #Robotics",
-        "video_url": "/static/assets/videos/neural_matrix.mp4",
+        "video_url": "./static/assets/videos/neural_matrix.mp4",
         "views": "1.4M", "likes": "45.2K", "retweets": "9.8K", "category": "AI & Robotics", "timestamp": "12m ago"
     },
     {
@@ -20,7 +20,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@OrbitalWatch",
         "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop",
         "text": "Spectacular booster separation captured from the orbital recovery vessel cameras. All 33 engines nominal! 🚀",
-        "video_url": "/static/assets/videos/space_nebula.mp4",
+        "video_url": "./static/assets/videos/space_nebula.mp4",
         "views": "4.2M", "likes": "140K", "retweets": "32K", "category": "Space", "timestamp": "5m ago"
     },
     {
@@ -29,7 +29,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@NeoTokyoGrid",
         "avatar": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=100&h=100&fit=crop",
         "text": "Central sector nighttime traffic telemetry and biometric billboard scan in rain district. Sector 09 clear. #Cyberpunk",
-        "video_url": "/static/assets/videos/cyber_grid.mp4",
+        "video_url": "./static/assets/videos/cyber_grid.mp4",
         "views": "1.1M", "likes": "54K", "retweets": "12K", "category": "Cyberpunk", "timestamp": "8m ago"
     },
     {
@@ -38,7 +38,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@NextGenRenders",
         "avatar": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=100&h=100&fit=crop",
         "text": "Lumen dynamic global illumination and Nanite micropolygon geometry benchmark running at 4K 120FPS. 🎮",
-        "video_url": "/static/assets/videos/quantum_core.mp4",
+        "video_url": "./static/assets/videos/quantum_core.mp4",
         "views": "3.1M", "likes": "125K", "retweets": "27K", "category": "Gaming", "timestamp": "15m ago"
     },
     {
@@ -47,7 +47,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@DailyCatsX",
         "avatar": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop",
         "text": "Ninja cat calculated the jump trajectory with microsecond precision! 🐾 #CatsOfTwitter",
-        "video_url": "/static/assets/videos/feline_telemetry.mp4",
+        "video_url": "./static/assets/videos/feline_telemetry.mp4",
         "views": "2.8M", "likes": "94K", "retweets": "18K", "category": "Cats", "timestamp": "3m ago"
     },
     {
@@ -56,7 +56,7 @@ const DEFAULT_FEEDS = [
         "author_handle": "@GoldenVibes",
         "avatar": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop",
         "text": "Teaching the puppy how to fetch the hypersonic disc! 🐶 #Dogs",
-        "video_url": "/static/assets/videos/radar_sweep.mp4",
+        "video_url": "./static/assets/videos/radar_sweep.mp4",
         "views": "3.1M", "likes": "130K", "retweets": "25K", "category": "Dogs", "timestamp": "10m ago"
     }
 ];
@@ -72,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupUI() {
     const searchForm = document.getElementById('search-form');
     const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
     const renderToggleBtn = document.getElementById('btn-render-mode');
     const addScreenBtn = document.getElementById('btn-add-screen');
     const addModal = document.getElementById('add-screen-modal');
@@ -139,14 +138,16 @@ function setupUI() {
             if (addInput) addInput.value = '';
             
             showToast(`Deploying Screen: #${topic}...`);
-            const res = await fetch(`/api/search?q=${encodeURIComponent(topic)}&count=1`);
-            const data = await res.json();
-            const item = (data && data.results && data.results[0]) ? data.results[0] : {
+            let results = [];
+            if (typeof TwitterEngine !== 'undefined') {
+                results = await TwitterEngine.search(topic, 1);
+            }
+            const item = (results && results[0]) ? results[0] : {
                 author_name: `${topic} Stream`,
                 author_handle: `@${topic}_feed`,
                 avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
                 text: `Dynamic screen stream allocated for #${topic}`,
-                video_url: "/static/assets/videos/cyber_grid.mp4",
+                video_url: "./static/assets/videos/cyber_grid.mp4",
                 views: "2.1M", likes: "60K"
             };
 
@@ -249,12 +250,25 @@ async function executeSearch(query) {
     showToast(`📡 SCANNING TWITTER FOR #${query.toUpperCase()}...`);
 
     try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&count=6`);
-        const data = await res.json();
-        if (data && data.success && data.results && data.results.length > 0) {
-            updateHoloScreens(data.results);
-            renderFeedList(data.results);
-            showToast(`✓ Intercepted ${data.results.length} Video Streams`);
+        let results = [];
+        // First try client-side direct Twitter Engine
+        if (typeof TwitterEngine !== 'undefined') {
+            results = await TwitterEngine.search(query, 6);
+        }
+        
+        // Fallback to local server API if running in python mode and results empty
+        if (!results || !results.length) {
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&count=6`);
+                const data = await res.json();
+                if (data && data.results) results = data.results;
+            } catch (err) {}
+        }
+
+        if (results && results.length > 0) {
+            updateHoloScreens(results);
+            renderFeedList(results);
+            showToast(`✓ Intercepted ${results.length} Video Streams`);
             setTimeout(() => focusOnScreen(0), 250);
         } else {
             showToast(`No video feeds found for "${query}"`);
@@ -317,7 +331,6 @@ function updateFocusPanel(item, index, custom) {
     document.getElementById('focus-retweets').innerText = item.retweets || '12K';
     document.getElementById('focus-screen-num').innerText = `SCREEN #0${index + 1}`;
 
-    // Sync Slider Positions
     if (custom) {
         document.getElementById('slider-scale').value = custom.scale || 1.0;
         document.getElementById('slider-pos-x').value = custom.x || 0;
