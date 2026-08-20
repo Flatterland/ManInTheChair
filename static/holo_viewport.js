@@ -1,13 +1,10 @@
 
-// Universal Dual-Engine 3D Holographic Viewport (GPU Three.js WebGL + CPU CSS 3D)
-let renderMode = localStorage.getItem('holo_render_mode') || 'cpu';
-
+// Universal 3D Holographic Viewport with Official Twitter / X Embeds
 let currentVideos = [];
 let activeScreensData = [];
 let focusedScreenIndex = null;
 let cameraMode = 'chair';
 let currentLayout = 'curved_dome';
-let holoColorHex = 0x00f0ff;
 let holoColorCss = '#00f0ff';
 
 let viewportEl = null;
@@ -18,70 +15,21 @@ let camRotX = 0, camRotY = 0, camPosZ = 0;
 let targetRotX = 0, targetRotY = 0;
 let orbitAngle = 0;
 
-let threeScene, threeCamera, threeRenderer, threeScreensGroup, threeParticles;
-let clock = new THREE.Clock();
-
 function initHoloViewport() {
-    console.log('[VIEWPORT] Initializing Holo Viewport in mode:', renderMode);
+    console.log('[VIEWPORT] Initializing 3D Holographic Bridge with Official Twitter Embeds...');
 
     viewportEl = document.getElementById('css3d-viewport');
     screensCluster = document.getElementById('screens-cluster');
 
     setupCameraControls();
-
-    if (typeof THREE !== 'undefined') {
-        try {
-            initThreeJsGpu();
-        } catch (e) {
-            console.warn('[VIEWPORT] WebGL GPU fallback to CPU:', e);
-            renderMode = 'cpu';
-        }
-    }
-
-    setRenderMode(renderMode);
     requestAnimationFrame(renderLoop);
-
-    // Global click listener to unlock audio & video playback
-    document.addEventListener('click', unlockMediaPlayback, { once: true });
-}
-
-function unlockMediaPlayback() {
-    activeScreensData.forEach(sd => {
-        if (sd.videoEl && sd.videoEl.paused) {
-            sd.videoEl.play().catch(() => {});
-        }
-    });
-}
-
-function setRenderMode(mode) {
-    renderMode = mode;
-    localStorage.setItem('holo_render_mode', mode);
-
-    const canvas = document.getElementById('webgl-canvas');
-    const cssVp = document.getElementById('css3d-viewport');
-    const toggleBtn = document.getElementById('btn-render-mode');
-
-    if (mode === 'gpu' && typeof THREE !== 'undefined' && threeRenderer) {
-        if (canvas) canvas.style.display = 'block';
-        if (cssVp) cssVp.style.display = 'none';
-        if (toggleBtn) toggleBtn.innerHTML = '⚡ GPU (WebGL)';
-    } else {
-        if (canvas) canvas.style.display = 'none';
-        if (cssVp) cssVp.style.display = 'flex';
-        if (toggleBtn) toggleBtn.innerHTML = '💻 CPU (CSS 3D)';
-    }
-
-    if (activeScreensData.length > 0) {
-        const items = activeScreensData.map(s => s.item);
-        updateHoloScreens(items);
-    }
 }
 
 function setupCameraControls() {
     window.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.top-hud') || e.target.closest('.left-feed-panel') || 
-            e.target.closest('.right-focus-panel') || e.target.closest('.bottom-cockpit-hud') || 
-            e.target.closest('.modal-backdrop') || e.target.closest('.trending-bar')) {
+        if (e.target.closest('.top-hud') || e.target.closest('.right-focus-panel') || 
+            e.target.closest('.bottom-cockpit-hud') || e.target.closest('.modal-backdrop') || 
+            e.target.closest('.trending-bar') || e.target.closest('.tweet-embed-container')) {
             return;
         }
         isDragging = true;
@@ -112,7 +60,7 @@ function setupCameraControls() {
     });
 
     window.addEventListener('wheel', (e) => {
-        if (e.target.closest('.left-feed-panel') || e.target.closest('.right-focus-panel')) return;
+        if (e.target.closest('.right-focus-panel') || e.target.closest('.holo-screen-3d')) return;
         camPosZ -= e.deltaY * 0.5;
         camPosZ = Math.max(-400, Math.min(300, camPosZ));
     }, { passive: true });
@@ -136,56 +84,42 @@ function resetCamera() {
     cameraMode = 'chair';
     focusedScreenIndex = null;
     if (viewportEl) viewportEl.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(0px)`;
-    if (threeCamera) threeCamera.position.set(0, 1.25, 0.3);
 }
 
 function renderLoop() {
     requestAnimationFrame(renderLoop);
 
-    if (renderMode === 'cpu') {
-        if (cameraMode === 'chair' && focusedScreenIndex === null) {
-            camRotX += (targetRotX - camRotX) * 0.08;
-            camRotY += (targetRotY - camRotY) * 0.08;
-            if (viewportEl) {
-                viewportEl.style.transform = `rotateX(${camRotX}deg) rotateY(${camRotY}deg) translateZ(${camPosZ}px)`;
-            }
-        } else if (cameraMode === 'orbit') {
-            orbitAngle = (orbitAngle + 0.35) % 360;
-            if (viewportEl) {
-                viewportEl.style.transform = `rotateX(12deg) rotateY(${orbitAngle}deg) translateZ(-100px)`;
-            }
+    if (cameraMode === 'chair' && focusedScreenIndex === null) {
+        camRotX += (targetRotX - camRotX) * 0.08;
+        camRotY += (targetRotY - camRotY) * 0.08;
+        if (viewportEl) {
+            viewportEl.style.transform = `rotateX(${camRotX}deg) rotateY(${camRotY}deg) translateZ(${camPosZ}px)`;
         }
-    } else if (renderMode === 'gpu' && threeRenderer) {
-        const elapsedTime = clock.getElapsedTime();
-        if (threeParticles) threeParticles.rotation.y = elapsedTime * 0.02;
-        if (cameraMode === 'orbit') {
-            const r = 5.2;
-            const a = elapsedTime * 0.25;
-            threeCamera.position.set(Math.sin(a) * r, 2.2, Math.cos(a) * r);
-            threeCamera.lookAt(0, 1.25, 0);
+    } else if (cameraMode === 'orbit') {
+        orbitAngle = (orbitAngle + 0.35) % 360;
+        if (viewportEl) {
+            viewportEl.style.transform = `rotateX(12deg) rotateY(${orbitAngle}deg) translateZ(-100px)`;
         }
-        threeRenderer.render(threeScene, threeCamera);
     }
 }
 
-function updateHoloScreens(videoItems) {
-    if (!videoItems || videoItems.length === 0) return;
+// -------------------------------------------------------------
+// Official Twitter Widget 3D Screen Hydration
+// -------------------------------------------------------------
+function updateHoloScreens(items) {
+    if (!items || items.length === 0) return;
 
-    currentVideos = videoItems;
-    activeScreensData = videoItems.map((item, index) => ({
+    currentVideos = items;
+    activeScreensData = items.map((item, index) => ({
         item: item,
         index: index,
         custom: { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
     }));
 
-    if (renderMode === 'cpu') {
-        renderCss3dScreens();
-    } else {
-        renderGpuScreens();
-    }
+    renderTwitterScreens();
 }
 
-function renderCss3dScreens() {
+function renderTwitterScreens() {
     if (!screensCluster) screensCluster = document.getElementById('screens-cluster');
     if (!screensCluster) return;
 
@@ -196,66 +130,64 @@ function renderCss3dScreens() {
         screen.className = 'holo-screen-3d';
         screen.dataset.index = index;
 
-        // Guaranteed Video Playback Attributes (without crossOrigin block)
-        const video = document.createElement('video');
-        video.className = 'screen-video-el';
-        video.muted = true;
-        video.defaultMuted = true;
-        video.autoplay = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.setAttribute('muted', '');
-        video.setAttribute('autoplay', '');
-        video.setAttribute('loop', '');
-        video.setAttribute('playsinline', '');
-        video.setAttribute('preload', 'auto');
-        video.src = item.video_url;
-
-        // Error fallback
-        video.onerror = () => {
-            console.warn('[VIEWPORT] Stream fallback for index', index);
-            if (typeof TwitterEngine !== 'undefined') {
-                video.src = TwitterEngine.LOCAL_VIDEO_POOL[index % TwitterEngine.LOCAL_VIDEO_POOL.length];
-                video.play().catch(() => {});
-            }
-        };
-
-        video.play().catch(e => {
-            console.log('Video autoplay waiting for gesture:', e);
-        });
-
-        screenData.videoEl = video;
-
         const tagBadge = document.createElement('div');
         tagBadge.className = 'screen-tag-badge';
-        tagBadge.innerText = `FEED #0${index + 1}: ${item.author_handle || '@Twitter'}`;
+        tagBadge.innerText = `3D SCREEN #0${index + 1} — TWITTER OFFICIAL`;
 
-        const liveBadge = document.createElement('div');
-        liveBadge.className = 'screen-live-badge';
-        liveBadge.innerHTML = `<span style="font-size:8px;">●</span> LIVE`;
+        const embedContainer = document.createElement('div');
+        embedContainer.className = 'tweet-embed-container';
+        embedContainer.id = `tweet-embed-${index}-${item.id}`;
 
-        const captionBar = document.createElement('div');
-        captionBar.className = 'screen-caption-bar';
-        captionBar.innerHTML = `
-            <div class="screen-caption-title">${item.text || ''}</div>
-            <div class="screen-caption-meta">👁 ${item.views || '1.4M'}   ❤️ ${item.likes || '42K'}</div>
-        `;
-
-        screen.appendChild(video);
         screen.appendChild(tagBadge);
-        screen.appendChild(liveBadge);
-        screen.appendChild(captionBar);
+        screen.appendChild(embedContainer);
 
+        // Click to focus and calibrate
         screen.addEventListener('click', (e) => {
-            e.stopPropagation();
-            focusOnScreen(index);
+            if (!e.target.closest('a') && !e.target.closest('button')) {
+                focusOnScreen(index);
+            }
         });
 
         screenData.domEl = screen;
         screensCluster.appendChild(screen);
+
+        // Mount Official Twitter Widget Embed
+        mountTwitterWidget(item.id, embedContainer);
     });
 
     applyLayout(currentLayout);
+}
+
+function mountTwitterWidget(tweetId, containerEl) {
+    if (typeof twttr !== 'undefined' && twttr.widgets) {
+        twttr.widgets.createTweet(
+            tweetId,
+            containerEl,
+            {
+                theme: 'dark',
+                conversation: 'none',
+                dnt: true,
+                align: 'center',
+                width: 360
+            }
+        ).then(el => {
+            if (!el) {
+                // Fallback block if tweet is deleted or blocked
+                containerEl.innerHTML = `
+                    <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">
+                        <div style="font-size:24px; margin-bottom:8px;">🛰️</div>
+                        <div style="color:var(--neon-cyan); font-weight:700; margin-bottom:4px;">LIVE TWITTER FEED ONLINE</div>
+                        <div>Tweet ID: ${tweetId}</div>
+                    </div>
+                `;
+            }
+        }).catch(err => {
+            console.warn('[TWITTER] Widget error for', tweetId, err);
+        });
+    } else {
+        // If Twitter widget script is loading, retry in 300ms
+        setTimeout(() => mountTwitterWidget(tweetId, containerEl), 300);
+    }
 }
 
 function applyLayout(layout) {
@@ -273,11 +205,11 @@ function applyLayout(layout) {
             const col = index % cols;
             const row = Math.floor(index / cols);
 
-            const angles = [-26, 0, 26];
+            const angles = [-28, 0, 28];
             const angle = (angles[col] || 0) + c.rotY;
-            const yOffset = (row === 0 ? -120 : 130) + c.y;
-            const zDist = (col === 1 ? -480 : -520) + c.z;
-            const xOffset = (col - 1) * 410 + c.x;
+            const yOffset = (row === 0 ? -160 : 180) + c.y;
+            const zDist = (col === 1 ? -520 : -570) + c.z;
+            const xOffset = (col - 1) * 440 + c.x;
 
             baseTransform = `translate3d(${xOffset}px, ${yOffset}px, ${zDist}px) rotateY(${-angle}deg) scale(${c.scale})`;
 
@@ -286,15 +218,15 @@ function applyLayout(layout) {
             const col = index % cols;
             const row = Math.floor(index / cols);
 
-            const xOffset = (col - 1) * 400 + c.x;
-            const yOffset = (row === 0 ? -120 : 130) + c.y;
-            const zDist = -450 + c.z;
+            const xOffset = (col - 1) * 440 + c.x;
+            const yOffset = (row === 0 ? -160 : 180) + c.y;
+            const zDist = -500 + c.z;
 
             baseTransform = `translate3d(${xOffset}px, ${yOffset}px, ${zDist}px) rotateY(${c.rotY}deg) scale(${c.scale})`;
 
         } else if (layout === 'cylinder_ring') {
             const angle = (index / total) * 360 + c.rotY;
-            baseTransform = `rotateY(${angle}deg) translateZ(${620 + c.z}px) translateY(${c.y}px) scale(${c.scale})`;
+            baseTransform = `rotateY(${angle}deg) translateZ(${700 + c.z}px) translateY(${c.y}px) scale(${c.scale})`;
         }
 
         screenData.domEl.style.transform = baseTransform;
@@ -308,7 +240,7 @@ function addCustomScreen(item) {
         custom: { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
     });
     currentVideos.push(item);
-    renderCss3dScreens();
+    renderTwitterScreens();
 }
 
 function removeScreen(index) {
@@ -316,7 +248,7 @@ function removeScreen(index) {
     activeScreensData.splice(index, 1);
     currentVideos.splice(index, 1);
     activeScreensData.forEach((s, idx) => s.index = idx);
-    renderCss3dScreens();
+    renderTwitterScreens();
     resetFocus();
 }
 
@@ -352,7 +284,7 @@ function loadSavedLayout() {
                 custom: s.custom || { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
             }));
             currentVideos = activeScreensData.map(s => s.item);
-            renderCss3dScreens();
+            renderTwitterScreens();
             showToast('✓ Restored Saved Layout Configuration');
         } catch (e) {
             console.error('Failed to load saved layout:', e);
@@ -378,10 +310,6 @@ function focusOnScreen(index) {
     if (!s) return;
 
     activeScreensData.forEach((sd, idx) => {
-        if (sd.videoEl) {
-            sd.videoEl.muted = (idx !== index);
-            if (idx === index && sd.videoEl.paused) sd.videoEl.play().catch(() => {});
-        }
         if (sd.domEl) sd.domEl.classList.toggle('focused', idx === index);
     });
 
@@ -389,12 +317,12 @@ function focusOnScreen(index) {
         window.onScreenFocused(s.item, index, s.custom);
     }
 
-    if (cameraMode === 'chair' && renderMode === 'cpu' && viewportEl) {
+    if (cameraMode === 'chair' && viewportEl) {
         const cols = 3;
         const col = index % cols;
-        const angles = [-26, 0, 26];
+        const angles = [-28, 0, 28];
         const rotY = -(angles[col] || 0);
-        viewportEl.style.transform = `rotateX(0deg) rotateY(${rotY}deg) translateZ(160px)`;
+        viewportEl.style.transform = `rotateX(0deg) rotateY(${rotY}deg) translateZ(120px)`;
     }
 }
 
@@ -431,81 +359,15 @@ function setLayout(layout) {
     applyLayout(layout);
 }
 
-function setHoloColor(hexColor) {
-    const hex = '#' + hexColor.toString(16).padStart(6, '0');
-    holoColorCss = hex;
-    holoColorHex = hexColor;
-    document.querySelectorAll('.holo-screen-3d').forEach(s => {
-        s.style.borderColor = hex;
-        s.style.boxShadow = `0 0 30px ${hex}40, inset 0 0 20px ${hex}20`;
-    });
-}
-
 function triggerGlitch(durationMs = 600) {
     activeScreensData.forEach(s => {
         if (s.domEl) {
             const rx = (Math.random() - 0.5) * 40;
             const ry = (Math.random() - 0.5) * 40;
-            s.domEl.style.transform = `scale(1.08) translate(${rx}px, ${ry}px)`;
+            s.domEl.style.transform = `scale(1.06) translate(${rx}px, ${ry}px)`;
         }
     });
     setTimeout(() => {
         applyLayout(currentLayout);
     }, durationMs);
-}
-
-function initThreeJsGpu() {
-    const canvas = document.getElementById('webgl-canvas');
-    if (!canvas) return;
-
-    threeScene = new THREE.Scene();
-    threeCamera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
-    threeCamera.position.set(0, 1.25, 0.3);
-
-    threeRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    threeRenderer.setSize(window.innerWidth, window.innerHeight);
-
-    const gridHelper = new THREE.GridHelper(30, 30, 0x00f0ff, 0x0a1c38);
-    gridHelper.position.y = -0.5;
-    threeScene.add(gridHelper);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-    threeScene.add(ambientLight);
-
-    threeScreensGroup = new THREE.Group();
-    threeScene.add(threeScreensGroup);
-}
-
-function renderGpuScreens() {
-    if (!threeScreensGroup) return;
-    while (threeScreensGroup.children.length > 0) {
-        threeScreensGroup.remove(threeScreensGroup.children[0]);
-    }
-
-    activeScreensData.forEach((screenData, index) => {
-        const item = screenData.item;
-        const video = document.createElement('video');
-        video.src = item.video_url;
-        video.loop = true;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.play().catch(() => {});
-
-        const tex = new THREE.VideoTexture(video);
-        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
-        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.05), mat);
-
-        const radius = 3.4;
-        const cols = 3;
-        const col = index % cols;
-        const row = Math.floor(index / cols);
-        const angles = [-0.5, 0, 0.5];
-        const angle = angles[col] || 0;
-
-        mesh.position.set(Math.sin(angle) * radius, 1.35 + (row === 0 ? 0.6 : -0.6), -Math.cos(angle) * radius);
-        mesh.lookAt(0, 1.25, 0.3);
-
-        threeScreensGroup.add(mesh);
-    });
 }

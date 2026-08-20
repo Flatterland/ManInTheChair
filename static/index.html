@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Man in the Chair – 3D Holographic Twitter Video Command Deck</title>
     <link rel="stylesheet" href="./static/style.css">
-    <script src="./static/three.min.js"></script>
-    <script src="./static/OrbitControls.js"></script>
+    <!-- Official Twitter / X Widgets SDK -->
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script src="./static/twitter_engine.js"></script>
 </head>
 <body>
 
-    <!-- 3D Three.js WebGL Canvas (GPU Mode) -->
-    <canvas id="webgl-canvas"></canvas>
-
-    <!-- 3D CSS Holographic Viewport (CPU / Software Mode) -->
+    <!-- 3D CSS Holographic Viewport (Compatible across all browsers, Hyper-V, and GPU machines) -->
     <div id="css3d-viewport">
         <div class="floor-grid"></div>
         <div id="screens-cluster"></div>
@@ -33,13 +30,12 @@
         <!-- Topic Search Bar -->
         <form class="search-container" id="search-form">
             <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" placeholder="Search topic or paste Twitter/X URL (e.g. cat, dog, space, #ai)..." autocomplete="off" />
+            <input type="text" id="search-input" placeholder="Search topic or paste Twitter/X URL (e.g. Starship, Sora, Cats, F1, https://x.com/...)" autocomplete="off" />
             <button type="submit" class="search-btn" id="search-btn">SCAN</button>
         </form>
 
         <!-- System Controls -->
         <div class="system-controls">
-            <button class="hud-btn render-toggle" id="btn-render-mode" title="Toggle GPU WebGL / CPU Software Mode">💻 CPU (CSS 3D)</button>
             <button class="hud-btn" id="btn-add-screen" title="Add More Hologram Screens">➕ ADD SCREEN</button>
             <button class="hud-btn cam-btn active" data-cam="chair" title="First-Person Chair View">💺 CHAIR</button>
             <button class="hud-btn cam-btn" data-cam="tactical" title="Tactical Overview">🛰️ TACTICAL</button>
@@ -52,55 +48,22 @@
     <div class="trending-bar">
         <div class="trend-pill" data-topic="cat">🐱 Cats</div>
         <div class="trend-pill" data-topic="dog">🐶 Dogs</div>
-        <div class="trend-pill active" data-topic="AI & Robotics">🤖 AI & Robotics</div>
-        <div class="trend-pill" data-topic="Space">🚀 Space Exploration</div>
-        <div class="trend-pill" data-topic="Cyberpunk">🌆 Cyberpunk</div>
-        <div class="trend-pill" data-topic="Gaming">🎮 Gaming UE5</div>
+        <div class="trend-pill active" data-topic="space">🚀 Starship & Space</div>
+        <div class="trend-pill" data-topic="ai">🤖 AI & Robotics</div>
+        <div class="trend-pill" data-topic="gaming">🎮 Gaming UE5</div>
+        <div class="trend-pill" data-topic="f1">🏎️ Formula 1</div>
     </div>
 
-    <!-- Left Telemetry Panel: Captured Feeds -->
-    <div class="left-feed-panel">
-        <div class="panel-header">
-            <span>SURVEILLANCE MATRIX</span>
-            <span style="font-size:10px; color:var(--neon-green);">ONLINE</span>
-        </div>
-        <div class="feed-list" id="feed-list"></div>
-    </div>
-
-    <!-- Right Focus & Adjuster Telemetry Panel -->
+    <!-- Right Screen Adjuster Telemetry Panel -->
     <div class="right-focus-panel" id="focus-panel">
-        <div class="panel-header">
-            <span id="focus-screen-num">SCREEN #01</span>
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="focus-screen-num" style="color:var(--neon-cyan); font-weight:700;">SCREEN #01</span>
             <button class="focus-close-btn" id="close-focus-btn">✕</button>
-        </div>
-
-        <div class="feed-header">
-            <img class="feed-avatar" id="focus-avatar" src="" alt="Avatar" />
-            <div>
-                <div class="feed-author" id="focus-author">-</div>
-                <div class="feed-handle" id="focus-handle">-</div>
-            </div>
-        </div>
-
-        <div class="feed-snippet" id="focus-text">-</div>
-
-        <div class="audio-visualizer-box">
-            <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-            <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-            <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-            <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
-        </div>
-
-        <div class="feed-meta">
-            <span>Views: <strong id="focus-views" style="color:var(--neon-cyan);">-</strong></span>
-            <span>Likes: <strong id="focus-likes" style="color:var(--neon-pink);">-</strong></span>
         </div>
 
         <!-- 3D Screen Spatial Adjuster Controls -->
         <div class="adjuster-section">
-            <div class="adjuster-header">
-                <span>⚙ SPATIAL CALIBRATION</span>
-            </div>
+            <div style="font-size:10px; font-weight:700; color:var(--neon-cyan); text-transform:uppercase;">⚙ SPATIAL CALIBRATION</div>
 
             <div class="control-slider-group">
                 <span>SCALE:</span>
@@ -133,7 +96,7 @@
 
     <!-- Bottom Cockpit Status Deck -->
     <div class="bottom-cockpit-hud">
-        <div class="cockpit-stat">SCREENS: <span id="stat-active-screens">0</span></div>
+        <div class="cockpit-stat">SCREENS: <span id="stat-active-screens">6</span></div>
         
         <div class="layout-picker">
             <button class="layout-btn active" data-layout="curved_dome">CURVED DOME</button>
@@ -142,15 +105,15 @@
         </div>
 
         <button class="hud-btn" id="btn-reset-layout" style="padding:4px 8px; font-size:10px;">↺ RESET LAYOUT</button>
-        <div class="cockpit-stat">STREAM: <span>60 FPS</span></div>
+        <div class="cockpit-stat">FEED: <span>OFFICIAL TWITTER</span></div>
     </div>
 
     <!-- Modal for Adding Screen -->
     <div class="modal-backdrop" id="add-screen-modal">
         <div class="modal-card">
-            <div style="font-size:14px; font-weight:700; color:var(--neon-cyan); letter-spacing:1px;">➕ DEPLOY NEW HOLOGRAM SCREEN</div>
+            <div style="font-size:14px; font-weight:700; color:var(--neon-cyan); letter-spacing:1px;">➕ DEPLOY NEW TWITTER / X SCREEN</div>
             <div style="font-size:11px; color:var(--text-muted);">Enter a topic, hashtag, or paste a direct Twitter/X post URL:</div>
-            <input type="text" id="modal-screen-topic" placeholder="e.g. Starship, NeuralNet, F1, https://x.com/..." />
+            <input type="text" id="modal-screen-topic" placeholder="e.g. Starship, Sora, F1, https://x.com/user/status/..." />
             <div style="display:flex; gap:10px;">
                 <button class="action-btn" id="modal-add-btn" style="background:var(--neon-cyan); color:#050811; font-weight:700; flex:2;">DEPLOY SCREEN</button>
                 <button class="action-btn" id="modal-cancel-btn" style="flex:1;">CANCEL</button>
