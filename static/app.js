@@ -1,77 +1,135 @@
 
-// Main Application Controller & HUD Orchestrator (Live Real-Time Streaming Video)
+// Main Application Controller & Cockpit Deck (Floating Twitter Browser + 3D Hologram Interceptor)
 let currentSelectedScreenIdx = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     setupUI();
     initHoloViewport();
-    // Initialize with real SpaceX & Space video streams
-    await executeSearch('spacex');
+    // Default initial surveillance streams
+    const initialFeeds = await TwitterEngine.search('spacex', 6);
+    updateHoloScreens(initialFeeds);
 });
 
 function setupUI() {
-    const searchForm = document.getElementById('search-form');
-    const searchInput = document.getElementById('search-input');
+    const quickForm = document.getElementById('quick-intercept-form');
+    const quickInput = document.getElementById('quick-intercept-input');
+    const toggleBrowserBtn = document.getElementById('btn-toggle-browser');
+    const browserPanel = document.getElementById('twitter-browser-panel');
+    const browserCloseBtn = document.getElementById('btn-browser-close');
+    const browserMinBtn = document.getElementById('btn-browser-minimize');
+    const navUrlInput = document.getElementById('browser-url-input');
+    const navGoBtn = document.getElementById('btn-nav-go');
+    const navReloadBtn = document.getElementById('btn-nav-reload');
+    const twitterIframe = document.getElementById('twitter-iframe');
+    const grabVideoInput = document.getElementById('grab-video-url');
+    const grabProjectBtn = document.getElementById('btn-grab-project');
+    const targetScreenSelect = document.getElementById('target-screen-select');
+
     const addScreenBtn = document.getElementById('btn-add-screen');
     const addModal = document.getElementById('add-screen-modal');
     const addSubmitBtn = document.getElementById('modal-add-btn');
     const addCancelBtn = document.getElementById('modal-cancel-btn');
     const addInput = document.getElementById('modal-screen-topic');
+
     const saveLayoutBtn = document.getElementById('btn-save-layout');
     const loadLayoutBtn = document.getElementById('btn-load-layout');
     const resetLayoutBtn = document.getElementById('btn-reset-layout');
     const resetCamBtn = document.getElementById('btn-reset-cam');
 
-    // Search Submit
-    if (searchForm) {
-        searchForm.addEventListener('submit', async (e) => {
+    // Quick Intercept Form Submit
+    if (quickForm) {
+        quickForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const query = searchInput ? searchInput.value.trim() : '';
-            if (query) await executeSearch(query);
+            const val = quickInput ? quickInput.value.trim() : '';
+            if (val) await projectToHologram(val, 'auto');
         });
     }
 
-    // Trending Pills
-    document.querySelectorAll('.trend-pill').forEach(pill => {
-        pill.addEventListener('click', async (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.trend-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const topic = pill.dataset.topic;
-            if (searchInput) searchInput.value = topic;
-            await executeSearch(topic);
+    // Toggle Floating Twitter Browser
+    if (toggleBrowserBtn && browserPanel) {
+        toggleBrowserBtn.addEventListener('click', () => {
+            const isVisible = browserPanel.style.display !== 'none';
+            browserPanel.style.display = isVisible ? 'none' : 'flex';
+            toggleBrowserBtn.classList.toggle('active', !isVisible);
+            showToast(!isVisible ? '🌐 Twitter Browser Console Online' : 'Browser Console Minimized');
+        });
+    }
+
+    if (browserCloseBtn && browserPanel) {
+        browserCloseBtn.addEventListener('click', () => {
+            browserPanel.style.display = 'none';
+            if (toggleBrowserBtn) toggleBrowserBtn.classList.remove('active');
+        });
+    }
+
+    if (browserMinBtn && browserPanel) {
+        browserMinBtn.addEventListener('click', () => {
+            const isMinimized = browserPanel.style.height === '40px';
+            browserPanel.style.height = isMinimized ? '480px' : '40px';
+        });
+    }
+
+    // Browser Navigation
+    const navigateBrowser = (url) => {
+        if (!url) return;
+        let finalUrl = url.trim();
+        if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+            finalUrl = 'https://' + finalUrl;
+        }
+        if (navUrlInput) navUrlInput.value = finalUrl;
+        if (twitterIframe) {
+            // Note: If Twitter restricts iframing via X-Frame-Options, we provide the clean bridge view
+            twitterIframe.src = finalUrl;
+        }
+        showToast(`Loading: ${finalUrl}`);
+    };
+
+    if (navGoBtn) navGoBtn.addEventListener('click', () => navigateBrowser(navUrlInput.value));
+    if (navUrlInput) navUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') navigateBrowser(navUrlInput.value);
+    });
+    if (navReloadBtn && twitterIframe) navReloadBtn.addEventListener('click', () => {
+        twitterIframe.src = twitterIframe.src;
+    });
+
+    // Quick Target Pills
+    document.querySelectorAll('.target-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const targetUrl = pill.dataset.url;
+            navigateBrowser(targetUrl);
+            if (grabVideoInput) grabVideoInput.value = targetUrl;
         });
     });
 
+    // Grab & Project to Hologram Button
+    if (grabProjectBtn) {
+        grabProjectBtn.addEventListener('click', async () => {
+            const grabVal = grabVideoInput ? grabVideoInput.value.trim() : '';
+            const targetScreen = targetScreenSelect ? targetScreenSelect.value : 'auto';
+            if (grabVal) {
+                await projectToHologram(grabVal, targetScreen);
+            } else {
+                showToast('Please enter or select a Tweet / Video URL to project');
+            }
+        });
+    }
+
     // Add Screen Modal
     if (addScreenBtn && addModal) {
-        addScreenBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+        addScreenBtn.addEventListener('click', () => {
             addModal.style.display = 'flex';
             if (addInput) addInput.focus();
         });
     }
-
     if (addCancelBtn && addModal) {
-        addCancelBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            addModal.style.display = 'none';
-        });
+        addCancelBtn.addEventListener('click', () => addModal.style.display = 'none');
     }
-
     if (addSubmitBtn && addModal) {
-        addSubmitBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const inputVal = addInput ? addInput.value.trim() : 'space';
+        addSubmitBtn.addEventListener('click', async () => {
+            const val = addInput ? addInput.value.trim() : 'space';
             addModal.style.display = 'none';
             if (addInput) addInput.value = '';
-            
-            showToast(`Deploying Screen: "${inputVal}"...`);
-            const matched = await TwitterEngine.search(inputVal, 1);
-            if (matched && matched.length > 0) {
-                addCustomScreen(matched[0]);
-                showToast(`✓ Screen #${activeScreensData.length} Added to 3D Matrix!`);
-            }
+            await projectToHologram(val, 'new');
         });
     }
 
@@ -86,25 +144,21 @@ function setupUI() {
 
     // Layout Pickers
     document.querySelectorAll('.layout-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
+        btn.addEventListener('click', () => {
             document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const layout = btn.dataset.layout;
-            setLayout(layout);
-            showToast(`Array: ${layout.replace('_', ' ').toUpperCase()}`);
+            setLayout(btn.dataset.layout);
+            showToast(`Array: ${btn.dataset.layout.replace('_', ' ').toUpperCase()}`);
         });
     });
 
     // Camera Mode Selectors
     document.querySelectorAll('.cam-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
+        btn.addEventListener('click', () => {
             document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const mode = btn.dataset.cam;
-            setCameraMode(mode);
-            showToast(`Camera: ${mode.toUpperCase()} MODE`);
+            setCameraMode(btn.dataset.cam);
+            showToast(`Camera: ${btn.dataset.cam.toUpperCase()} MODE`);
         });
     });
 
@@ -124,6 +178,47 @@ function setupUI() {
 
     const closeFocusBtn = document.getElementById('close-focus-btn');
     if (closeFocusBtn) closeFocusBtn.addEventListener('click', () => resetFocus());
+}
+
+async function projectToHologram(inputVal, targetScreen = 'auto') {
+    triggerGlitch(400);
+    showToast(`⚡ Intercepting video stream from: "${inputVal}"...`);
+
+    const results = await TwitterEngine.search(inputVal, 1);
+    if (!results || !results.length) {
+        showToast('Could not resolve video stream from target');
+        return;
+    }
+
+    const item = results[0];
+
+    if (targetScreen === 'new') {
+        addCustomScreen(item);
+        showToast(`✓ Projected to NEW Hologram Screen #${activeScreensData.length}!`);
+        setTimeout(() => focusOnScreen(activeScreensData.length - 1), 300);
+    } else if (targetScreen === 'auto') {
+        // Project onto focused screen or next in array
+        const targetIdx = focusedScreenIndex !== null ? focusedScreenIndex : (activeScreensData.length ? 0 : 'new');
+        if (targetIdx === 'new') {
+            addCustomScreen(item);
+        } else {
+            activeScreensData[targetIdx].item = item;
+            renderLiveVideoScreens();
+            focusOnScreen(targetIdx);
+        }
+        showToast(`✓ Projected Stream to Screen #${(typeof targetIdx === 'number' ? targetIdx + 1 : 1)}!`);
+    } else {
+        const idx = parseInt(targetScreen, 10);
+        if (activeScreensData[idx]) {
+            activeScreensData[idx].item = item;
+            renderLiveVideoScreens();
+            focusOnScreen(idx);
+            showToast(`✓ Stream Injected into Screen #0${idx + 1}!`);
+        } else {
+            addCustomScreen(item);
+            showToast(`✓ Created Screen #${activeScreensData.length} for Stream!`);
+        }
+    }
 }
 
 function setupAdjusterSliders() {
@@ -156,30 +251,6 @@ function setupAdjusterSliders() {
             showToast('Screen Removed from Matrix');
         }
     });
-}
-
-async function executeSearch(query) {
-    const searchBtn = document.getElementById('search-btn');
-    if (searchBtn) searchBtn.innerText = 'SCANNING...';
-    triggerGlitch(500);
-    showToast(`📡 SCANNING LIVE REPOSITORIES FOR: "${query.toUpperCase()}"...`);
-
-    try {
-        const results = await TwitterEngine.search(query, 6);
-        if (results && results.length > 0) {
-            updateHoloScreens(results);
-            const statScreens = document.getElementById('stat-active-screens');
-            if (statScreens) statScreens.innerText = results.length;
-            showToast(`✓ Intercepted ${results.length} Real Videos for "${query.toUpperCase()}"`);
-            setTimeout(() => focusOnScreen(0), 350);
-        } else {
-            showToast(`No live videos found for "${query}"`);
-        }
-    } catch (e) {
-        showToast('Error querying video streams');
-    } finally {
-        if (searchBtn) searchBtn.innerText = 'SCAN';
-    }
 }
 
 function updateFocusPanel(item, index, custom) {

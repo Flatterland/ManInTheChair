@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Man in the Chair – 3D Holographic Twitter Video Command Deck</title>
+    <title>Man in the Chair – 3D Holographic Twitter Command Deck</title>
     <link rel="stylesheet" href="./static/style.css">
-    <!-- Official Twitter / X Widgets SDK -->
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script src="./static/twitter_engine.js"></script>
 </head>
 <body>
 
-    <!-- 3D CSS Holographic Viewport (Compatible across all browsers, Hyper-V, and GPU machines) -->
+    <!-- 3D CSS Holographic Viewport -->
     <div id="css3d-viewport">
         <div class="floor-grid"></div>
         <div id="screens-cluster"></div>
@@ -23,19 +21,20 @@
             <div class="brand-icon">💺</div>
             <div>
                 <div class="brand-title">Holo-Chair Deck</div>
-                <div class="brand-sub">TWITTER / X VIDEO COMMAND MATRIX</div>
+                <div class="brand-sub">TWITTER / X VIDEO INTERCEPT MATRIX</div>
             </div>
         </div>
 
-        <!-- Topic Search Bar -->
-        <form class="search-container" id="search-form">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" placeholder="Search topic or paste Twitter/X URL (e.g. Starship, Sora, Cats, F1, https://x.com/...)" autocomplete="off" />
-            <button type="submit" class="search-btn" id="search-btn">SCAN</button>
+        <!-- Quick Intercept Input -->
+        <form class="search-container" id="quick-intercept-form">
+            <span class="search-icon">⚡</span>
+            <input type="text" id="quick-intercept-input" placeholder="Paste Twitter/X Tweet URL or Video Stream URL to project into Hologram..." autocomplete="off" />
+            <button type="submit" class="search-btn" id="quick-intercept-btn">PROJECT</button>
         </form>
 
         <!-- System Controls -->
         <div class="system-controls">
+            <button class="hud-btn active" id="btn-toggle-browser" title="Toggle Floating Twitter Browser Console">🌐 TWITTER BROWSER</button>
             <button class="hud-btn" id="btn-add-screen" title="Add More Hologram Screens">➕ ADD SCREEN</button>
             <button class="hud-btn cam-btn active" data-cam="chair" title="First-Person Chair View">💺 CHAIR</button>
             <button class="hud-btn cam-btn" data-cam="tactical" title="Tactical Overview">🛰️ TACTICAL</button>
@@ -44,14 +43,67 @@
         </div>
     </div>
 
-    <!-- Trending Topic Filter Bar -->
-    <div class="trending-bar">
-        <div class="trend-pill" data-topic="cat">🐱 Cats</div>
-        <div class="trend-pill" data-topic="dog">🐶 Dogs</div>
-        <div class="trend-pill active" data-topic="space">🚀 Starship & Space</div>
-        <div class="trend-pill" data-topic="ai">🤖 AI & Robotics</div>
-        <div class="trend-pill" data-topic="gaming">🎮 Gaming UE5</div>
-        <div class="trend-pill" data-topic="f1">🏎️ Formula 1</div>
+    <!-- Floating Live Twitter Browser Console Deck -->
+    <div class="floating-browser-panel" id="twitter-browser-panel">
+        <div class="browser-header">
+            <div class="browser-tab">
+                <span style="color:var(--neon-cyan);">𝕏</span> Live Twitter / X Cockpit Browser
+            </div>
+            <div class="browser-window-controls">
+                <button class="browser-win-btn" id="btn-browser-minimize">_</button>
+                <button class="browser-win-btn" id="btn-browser-close">✕</button>
+            </div>
+        </div>
+
+        <!-- Browser Navigation Bar -->
+        <div class="browser-nav-bar">
+            <button class="nav-btn" id="btn-nav-back" title="Back">◀</button>
+            <button class="nav-btn" id="btn-nav-forward" title="Forward">▶</button>
+            <button class="nav-btn" id="btn-nav-reload" title="Reload">↻</button>
+            <div class="browser-url-bar">
+                <span style="font-size:12px; color:var(--text-muted);">🔒</span>
+                <input type="text" id="browser-url-input" value="https://x.com/search?q=filter%3Avideos&f=live" placeholder="https://x.com/..." />
+                <button class="nav-go-btn" id="btn-nav-go">GO</button>
+            </div>
+        </div>
+
+        <!-- Video Grabber / Interception Action Bar -->
+        <div class="browser-action-bar">
+            <div class="grabber-pill-group">
+                <span style="font-size:10px; color:var(--neon-cyan); font-weight:700;">QUICK TARGETS:</span>
+                <button class="target-pill" data-url="https://x.com/SpaceX">🚀 @SpaceX</button>
+                <button class="target-pill" data-url="https://x.com/OpenAI">🤖 @OpenAI</button>
+                <button class="target-pill" data-url="https://x.com/BostonDynamics">🦾 @BostonDynamics</button>
+                <button class="target-pill" data-url="https://x.com/DailyCatsX">🐱 @DailyCatsX</button>
+                <button class="target-pill" data-url="https://x.com/F1">🏎️ @F1</button>
+                <button class="target-pill" data-url="https://x.com/search?q=starship%20video&f=live">🔍 Starship Live</button>
+            </div>
+            <div class="grabber-trigger-row">
+                <input type="text" id="grab-video-url" placeholder="Paste on-site video link or Tweet URL to project..." />
+                <select id="target-screen-select">
+                    <option value="auto">Target: Next Screen (Auto)</option>
+                    <option value="0">Screen #01</option>
+                    <option value="1">Screen #02</option>
+                    <option value="2">Screen #03</option>
+                    <option value="3">Screen #04</option>
+                    <option value="4">Screen #05</option>
+                    <option value="5">Screen #06</option>
+                    <option value="new">➕ New Screen</option>
+                </select>
+                <button class="grab-project-btn" id="btn-grab-project">⚡ PROJECT TO HOLOGRAM</button>
+            </div>
+        </div>
+
+        <!-- Embedded Interactive Browser Frame -->
+        <div class="browser-viewport-container">
+            <iframe id="twitter-iframe" src="https://platform.twitter.com/widgets/tweet.html" allow="autoplay; fullscreen; encrypted-media"></iframe>
+            <div class="browser-overlay-hint" id="browser-hint">
+                <div style="font-size:16px; font-weight:700; color:var(--neon-cyan); margin-bottom:6px;">📡 TWITTER ON-SITE VIDEO INTERCEPTOR READY</div>
+                <div style="font-size:12px; color:var(--text-muted); max-width:440px; margin-bottom:12px;">
+                    Browse Twitter / X directly above or paste any Tweet / Video URL into the Projector to instantly capture and project its video stream onto your 3D floating hologram deck.
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Right Screen Adjuster Telemetry Panel -->
@@ -105,7 +157,7 @@
         </div>
 
         <button class="hud-btn" id="btn-reset-layout" style="padding:4px 8px; font-size:10px;">↺ RESET LAYOUT</button>
-        <div class="cockpit-stat">FEED: <span>OFFICIAL TWITTER</span></div>
+        <div class="cockpit-stat">STREAM MATRIX: <span style="color:var(--neon-green);">ACTIVE</span></div>
     </div>
 
     <!-- Modal for Adding Screen -->
