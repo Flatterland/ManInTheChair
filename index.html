@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Man in the Chair – 3D Holographic YouTube Command Deck</title>
-    <!-- YouTube Official Iframe Player API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
     <link rel="stylesheet" href="./static/style.css">
 </head>
 <body>
@@ -46,17 +44,17 @@
 
     <!-- Category Quick Pills -->
     <div class="pills-bar">
-        <button class="pill active" data-cat="Space exploration launches">🚀 Space</button>
-        <button class="pill" data-cat="Boston Dynamics robots AI">🤖 AI & Robotics</button>
-        <button class="pill" data-cat="Nature 4k ocean wildlife">🌿 Nature</button>
-        <button class="pill" data-cat="Funny cats viral moments">🐱 Cats</button>
-        <button class="pill" data-cat="Cyberpunk synthwave city 4k">🌆 Cyberpunk</button>
-        <button class="pill" data-cat="Formula 1 onboard race">🏎️ Formula 1</button>
-        <button class="pill" data-cat="Unreal Engine 5 gameplay trailers">🎮 Gaming</button>
-        <button class="pill" data-cat="Popular hit music videos">🎵 Music</button>
+        <button class="pill active" data-cat="space">🚀 Space</button>
+        <button class="pill" data-cat="ai">🤖 AI & Robotics</button>
+        <button class="pill" data-cat="nature">🌿 Nature</button>
+        <button class="pill" data-cat="cats">🐱 Cats</button>
+        <button class="pill" data-cat="cyberpunk">🌆 Cyberpunk</button>
+        <button class="pill" data-cat="f1">🏎️ Formula 1</button>
+        <button class="pill" data-cat="gaming">🎮 Gaming</button>
+        <button class="pill" data-cat="music">🎵 Music</button>
     </div>
 
-    <!-- Left/Side Drawer: Now Playing Streams List -->
+    <!-- Left Drawer: Now Playing Streams List -->
     <div class="side-panel left-drawer" id="playlist-panel">
         <div class="panel-title-row">
             <span>📋 ACTIVE VIDEO STREAMS</span>
@@ -64,7 +62,7 @@
         </div>
         <div class="playlist-sub" id="playlist-queue-info">Loading active streams...</div>
         <div class="playlist-scroll" id="playlist-list">
-            <!-- Dynamically populated by updateUILists() -->
+            <!-- Populated dynamically -->
         </div>
     </div>
 
@@ -89,14 +87,14 @@
             </div>
         </div>
         <div class="mixer-strips-scroll" id="mixer-strips">
-            <!-- Dynamically populated channel faders -->
+            <!-- Populated dynamically -->
         </div>
     </div>
 
     <!-- Right Panel: Screen Spatial Adjuster -->
     <div class="side-panel right-drawer" id="adj-panel">
         <div class="panel-title-row">
-            <span id="adj-screen-label">SCREEN #01 SPATIAL CALIBRATION</span>
+            <span id="adj-screen-label">SCREEN #01 CALIBRATION</span>
             <button class="panel-close-btn" id="adj-close">✕</button>
         </div>
         <div class="slider-group">

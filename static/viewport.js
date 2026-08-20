@@ -195,7 +195,6 @@ window.addEventListener('message', e => {
   let data;
   try { data = JSON.parse(e.data); } catch { return; }
   if (data.event === 'onError' || (data.info && typeof data.info === 'number' && [2, 5, 100, 101, 150].includes(data.info))) {
-    // Find which screen sent the error
     screens.forEach((s, idx) => {
       const iframe = s.el && s.el.querySelector('iframe');
       if (iframe && iframe.contentWindow === e.source) {
@@ -212,7 +211,6 @@ function unmuteScreen(idx) {
   if (!s) return;
 
   if (soloAudioMode) {
-    // Mute all other screens
     screens.forEach((other, oIdx) => {
       if (oIdx !== idx) muteScreen(oIdx);
     });

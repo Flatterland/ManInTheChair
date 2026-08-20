@@ -184,7 +184,6 @@ const YT = {
       `https://yewtu.be/api/v1/search?q=${encodeURIComponent(query)}&type=video`
     ];
 
-    // Try endpoints with quick 2.5s timeout
     for (const ep of endpoints) {
       try {
         const ctrl = new AbortController();
@@ -211,7 +210,6 @@ const YT = {
           }
           if (liveVids.length > 0) {
             console.log(`[MitC] Live search returned ${liveVids.length} videos from ${ep}`);
-            // Prepend new live results to search queue
             this.searchQueue = [...liveVids, ...this.DEEP_FALLBACK];
             this.queueIndex = 6;
             if (typeof onResults === 'function') {
