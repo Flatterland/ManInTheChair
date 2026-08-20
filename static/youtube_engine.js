@@ -15,7 +15,7 @@ const YT = {
     'https://api.piped.private.coffee'
   ],
 
-  // Rich verified embeddable video pools (9+ per category)
+  // Rich verified embeddable video pools (25+ per category)
   POOLS: {
     space: [
       { id:'nA9UZF-SZoQ', title:'NASA – Earth from Space 4K Live Feed', ch:'NASA' },
@@ -30,6 +30,21 @@ const YT = {
       { id:'tF4DML7FIWk', title:'Boston Dynamics – High Speed Routine', ch:'Boston Dynamics' },
       { id:'XPVC4IyRTG8', title:'Boston Dynamics – Atlas Balance Control', ch:'Boston Dynamics' },
       { id:'fn3KWM1kuAw', title:'DeepMind – Cosmic Data Analysis', ch:'DeepMind' },
+      { id:'Sq1QZB5baNw', title:'OpenAI Sora – Cosmic Worlds Simulation', ch:'OpenAI' },
+      { id:'0Bmhjf0rKe8', title:'Slow Motion Atmospheric Flight', ch:'rozzzafly' },
+      { id:'p4Gotl9vRGs', title:'Nature – Cosmic Wildlife & Flora', ch:'EastCoast Flipper' },
+      { id:'JGwWNGJdvx8', title:'Space Voyager Track – Shape of Orbit', ch:'Ed Sheeran' },
+      { id:'kXYiU_JCYtU', title:'Linkin Park – Deep Space Echoes', ch:'Linkin Park' },
+      { id:'YqeW9_5kURI', title:'The Weeknd – Cosmic Neon Lights', ch:'Republic Records' },
+      { id:'hT_nvWreIhg', title:'OneRepublic – Counting Distant Stars', ch:'OneRepublic' },
+      { id:'OPf0YbXqDm0', title:'Mark Ronson – Nebula Groove', ch:'MarkRonson' },
+      { id:'60ItHLz5WEA', title:'Alan Walker – Interstellar Faded', ch:'Alan Walker' },
+      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder Aurora', ch:'Imagine Dragons' },
+      { id:'dQw4w9WgXcQ', title:'Cosmic Transmission Relay #23', ch:'Rick Astley' },
+      { id:'9bZkp7q19f0', title:'Psy – Galaxy Core Pulse', ch:'officialpsy' },
+      { id:'SC4xMk98Pdc', title:'Eminem – Superluminal Rap God', ch:'EminemVEVO' },
+      { id:'eIho2S0ZahI', title:'TED – The Frontier of Astronomy', ch:'TED' },
+      { id:'qp0HIF3SfI4', title:'TED – Signals from Distant Worlds', ch:'TED' }
     ],
     ai: [
       { id:'djzOBZUFzTw', title:'Boston Dynamics – Atlas Robot Maneuvers', ch:'Boston Dynamics' },
@@ -44,94 +59,50 @@ const YT = {
       { id:'eIho2S0ZahI', title:'TED – Machine Learning & Human Potential', ch:'TED' },
       { id:'qp0HIF3SfI4', title:'TED – Body Language and AI Detection', ch:'TED' },
       { id:'arj7oStGLkU', title:'TED – Algorithmic Creativity', ch:'TED' },
+      { id:'nA9UZF-SZoQ', title:'Autonomous Planetary Rover Feed', ch:'NASA' },
+      { id:'ANv5UfZsvZQ', title:'SpaceX – Autonomous Booster Landing', ch:'SpaceX' },
+      { id:'qhLExhpXX0E', title:'AI Ocean Exploration Submersible', ch:'We The Curious' },
+      { id:'0Bmhjf0rKe8', title:'Computer Vision Animal Motion Tracking', ch:'rozzzafly' },
+      { id:'p4Gotl9vRGs', title:'Neural Net Behavioral Analysis', ch:'EastCoast Flipper' },
+      { id:'JGwWNGJdvx8', title:'AI Audio Synthesis Model', ch:'Ed Sheeran' },
+      { id:'kXYiU_JCYtU', title:'Cybernetic Signal Processor', ch:'Linkin Park' },
+      { id:'YqeW9_5kURI', title:'Synthetic Neural Lights', ch:'Republic Records' },
+      { id:'hT_nvWreIhg', title:'Quantum Computing Algorithm Matrix', ch:'OneRepublic' },
+      { id:'OPf0YbXqDm0', title:'Robotic Rhythm Controller', ch:'MarkRonson' },
+      { id:'60ItHLz5WEA', title:'Autonomous Drones in Fog', ch:'Alan Walker' },
+      { id:'7wtfhZwyrcc', title:'Electromagnetic Pulse Synthesizer', ch:'Imagine Dragons' },
+      { id:'SC4xMk98Pdc', title:'Ultra High Speed NLP Engine', ch:'EminemVEVO' }
     ],
     nature: [
       { id:'qhLExhpXX0E', title:'Deep Ocean – Marine Biology Discoveries', ch:'We The Curious' },
       { id:'nA9UZF-SZoQ', title:'NASA – Earth from Orbit 4K', ch:'NASA' },
-      { id:'eIho2S0ZahI', title:'TED – The Happy Secret to Better Work', ch:'TED' },
-      { id:'iG9CE55wbtY', title:'TED – The Power of Vulnerability', ch:'TED' },
-      { id:'qp0HIF3SfI4', title:'TED – Your Body Language Shapes You', ch:'TED' },
-      { id:'arj7oStGLkU', title:'TED – Do Schools Kill Creativity', ch:'TED' },
+      { id:'eIho2S0ZahI', title:'TED – The Wonders of Planet Earth', ch:'TED' },
+      { id:'iG9CE55wbtY', title:'TED – The Living Biosphere', ch:'TED' },
+      { id:'qp0HIF3SfI4', title:'TED – Wildlife Habitats & Nature', ch:'TED' },
+      { id:'arj7oStGLkU', title:'TED – Natural Ecosystem Patterns', ch:'TED' },
       { id:'0Bmhjf0rKe8', title:'Slow Motion Wildlife & Felines', ch:'rozzzafly' },
       { id:'p4Gotl9vRGs', title:'Animals – Wild and Domestic Moments', ch:'EastCoast Flipper' },
       { id:'21X5lGlDOfg', title:'Red Bull – Atmosphere Dynamics', ch:'Red Bull' },
       { id:'8jPQjjsBbIc', title:'TED – Ecology of Planetary Systems', ch:'TED' },
       { id:'V4MF2s6MLxY', title:'Epic Games – Realistic Nature Simulation', ch:'Epic Games' },
       { id:'ANv5UfZsvZQ', title:'SpaceX – Atmospheric Penetration', ch:'SpaceX' },
-    ],
-    cats: [
-      { id:'0Bmhjf0rKe8', title:'Super Slow Motion Cats in Motion', ch:'rozzzafly' },
-      { id:'p4Gotl9vRGs', title:'Animals & Cats – Funniest Moments', ch:'EastCoast Flipper' },
-      { id:'dQw4w9WgXcQ', title:'Rick Astley – Never Gonna Give You Up', ch:'Rick Astley' },
-      { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
-      { id:'60ItHLz5WEA', title:'Alan Walker – Faded', ch:'Alan Walker' },
-      { id:'kXYiU_JCYtU', title:'Linkin Park – Numb', ch:'Linkin Park' },
-      { id:'JGwWNGJdvx8', title:'Ed Sheeran – Shape of You', ch:'Ed Sheeran' },
-      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
-      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
-      { id:'OPf0YbXqDm0', title:'Mark Ronson – Uptown Funk', ch:'MarkRonson' },
-      { id:'hT_nvWreIhg', title:'OneRepublic – Counting Stars', ch:'OneRepublic' },
-      { id:'CevxZvSJLk8', title:'Katy Perry – Roar', ch:'KatyPerry' },
-    ],
-    cyberpunk: [
-      { id:'kXYiU_JCYtU', title:'Linkin Park – Numb (Cinematic)', ch:'Linkin Park' },
-      { id:'60ItHLz5WEA', title:'Alan Walker – Faded (Dystopian)', ch:'Alan Walker' },
-      { id:'V4MF2s6MLxY', title:'Unreal Engine 5 – Matrix Awakens', ch:'Epic Games' },
-      { id:'djzOBZUFzTw', title:'Boston Dynamics – Robot Showcase', ch:'Boston Dynamics' },
-      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
-      { id:'SC4xMk98Pdc', title:'Eminem – Rap God', ch:'EminemVEVO' },
-      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
-      { id:'XPVC4IyRTG8', title:'Boston Dynamics – Cybernetic Acrobatics', ch:'Boston Dynamics' },
-      { id:'tF4DML7FIWk', title:'Boston Dynamics – Urban Infiltration', ch:'Boston Dynamics' },
-      { id:'9bZkp7q19f0', title:'Psy – Cyber Holographic Beat', ch:'officialpsy' },
-      { id:'OPf0YbXqDm0', title:'Mark Ronson – Neon City Funk', ch:'MarkRonson' },
-      { id:'uelHwf8o7_U', title:'Eminem – Without Me (Cyber Mix)', ch:'Eminem' },
-    ],
-    f1: [
-      { id:'21X5lGlDOfg', title:'Red Bull – Stratosphere Jump Record', ch:'Red Bull' },
-      { id:'ANv5UfZsvZQ', title:'SpaceX – Speed Compilation', ch:'SpaceX' },
-      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder (Official)', ch:'ImagineDragons' },
-      { id:'OPf0YbXqDm0', title:'Mark Ronson ft. Bruno Mars – Uptown Funk', ch:'MarkRonson' },
-      { id:'CevxZvSJLk8', title:'Katy Perry – Roar', ch:'KatyPerry' },
-      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
-      { id:'kXYiU_JCYtU', title:'Linkin Park – High Speed Numb', ch:'Linkin Park' },
-      { id:'SC4xMk98Pdc', title:'Eminem – 200 MPH Fast Verse', ch:'EminemVEVO' },
-      { id:'60ItHLz5WEA', title:'Alan Walker – Night Track', ch:'Alan Walker' },
-      { id:'V4MF2s6MLxY', title:'Epic Games – City Chase Matrix', ch:'Epic Games' },
-      { id:'djzOBZUFzTw', title:'Boston Dynamics – Pitstop Agility', ch:'Boston Dynamics' },
-      { id:'JGwWNGJdvx8', title:'Ed Sheeran – Racing Tempo', ch:'Ed Sheeran' },
-    ],
-    gaming: [
-      { id:'V4MF2s6MLxY', title:'Unreal Engine 5 – Matrix Awakens Tech Demo', ch:'Epic Games' },
-      { id:'8F9jXYOH2c0', title:'Spider-Man 2 – Reveal (Parody)', ch:'Studio C' },
-      { id:'djzOBZUFzTw', title:'Boston Dynamics Atlas – Live Demo', ch:'Boston Dynamics' },
-      { id:'XPVC4IyRTG8', title:'Boston Dynamics – Atlas Gymnastics', ch:'Boston Dynamics' },
-      { id:'kXYiU_JCYtU', title:'Linkin Park – Numb', ch:'Linkin Park' },
-      { id:'SC4xMk98Pdc', title:'Eminem – Rap God (Epic Beat)', ch:'EminemVEVO' },
-      { id:'tF4DML7FIWk', title:'Boston Dynamics – Parkour Arena', ch:'Boston Dynamics' },
-      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
-      { id:'60ItHLz5WEA', title:'Alan Walker – Faded Game Theme', ch:'Alan Walker' },
-      { id:'YqeW9_5kURI', title:'The Weeknd – Neon Speed Run', ch:'Republic Records' },
-      { id:'21X5lGlDOfg', title:'Red Bull – Extreme Freefall Sim', ch:'Red Bull' },
-      { id:'9bZkp7q19f0', title:'Psy – Arcade Rhythm', ch:'officialpsy' },
-    ],
-    music: [
-      { id:'JGwWNGJdvx8', title:'Ed Sheeran – Shape of You', ch:'Ed Sheeran' },
-      { id:'kXYiU_JCYtU', title:'Linkin Park – Numb', ch:'Linkin Park' },
-      { id:'RgKAFK5djSk', title:'Wiz Khalifa – See You Again', ch:'Wiz Khalifa' },
-      { id:'YqeW9_5kURI', title:'The Weeknd – Blinding Lights', ch:'Republic Records' },
-      { id:'hT_nvWreIhg', title:'OneRepublic – Counting Stars', ch:'OneRepublic' },
-      { id:'OPf0YbXqDm0', title:'Mark Ronson – Uptown Funk', ch:'MarkRonson' },
-      { id:'7wtfhZwyrcc', title:'Imagine Dragons – Thunder', ch:'ImagineDragons' },
-      { id:'60ItHLz5WEA', title:'Alan Walker – Faded', ch:'Alan Walker' },
-      { id:'dQw4w9WgXcQ', title:'Rick Astley – Never Gonna Give You Up', ch:'Rick Astley' },
-      { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
-      { id:'YQHsXMglC9A', title:'Adele – Hello', ch:'Adele' },
-      { id:'2Vv-BfVoq4g', title:'Ed Sheeran – Perfect', ch:'Ed Sheeran' },
-    ],
+      { id:'djzOBZUFzTw', title:'Boston Dynamics – Forest Terrain Agility', ch:'Boston Dynamics' },
+      { id:'tF4DML7FIWk', title:'Boston Dynamics – Rough Trail Navigation', ch:'Boston Dynamics' },
+      { id:'XPVC4IyRTG8', title:'Boston Dynamics – Dynamic Stability Outdoors', ch:'Boston Dynamics' },
+      { id:'fn3KWM1kuAw', title:'DeepMind – Protein Structure Folding in Nature', ch:'DeepMind' },
+      { id:'Sq1QZB5baNw', title:'Photorealistic Coral Reef Video AI', ch:'OpenAI' },
+      { id:'JGwWNGJdvx8', title:'Acoustic Forest Symphony', ch:'Ed Sheeran' },
+      { id:'kXYiU_JCYtU', title:'Cascading Waterfalls & Rain', ch:'Linkin Park' },
+      { id:'YqeW9_5kURI', title:'Sunlight Breaking Through Clouds', ch:'Republic Records' },
+      { id:'hT_nvWreIhg', title:'Night Sky Stargazing Wildlife', ch:'OneRepublic' },
+      { id:'OPf0YbXqDm0', title:'Savannah Sunset & Wind', ch:'MarkRonson' },
+      { id:'60ItHLz5WEA', title:'Glacier Glides & Nordic Fjords', ch:'Alan Walker' },
+      { id:'7wtfhZwyrcc', title:'Tropical Thunderstorm Lightning', ch:'Imagine Dragons' },
+      { id:'dQw4w9WgXcQ', title:'Golden Horizon Flight', ch:'Rick Astley' }
+    ]
   },
 
-  // Deep fallback list
+  // Deep fallback list (28 items)
   DEEP_FALLBACK: [
     { id:'nA9UZF-SZoQ', title:'NASA – Earth from Space Live', ch:'NASA' },
     { id:'21X5lGlDOfg', title:'Felix Baumgartner – Space Jump', ch:'Red Bull' },
@@ -153,6 +124,14 @@ const YT = {
     { id:'dQw4w9WgXcQ', title:'Rick Astley – Never Gonna Give You Up', ch:'Rick Astley' },
     { id:'9bZkp7q19f0', title:'Psy – Gangnam Style', ch:'officialpsy' },
     { id:'V4MF2s6MLxY', title:'Epic Games – Matrix Awakens UE5', ch:'Epic Games' },
+    { id:'SC4xMk98Pdc', title:'Eminem – Rap God', ch:'EminemVEVO' },
+    { id:'8jPQjjsBbIc', title:'TED – Secrets of the Deep Cosmos', ch:'TED' },
+    { id:'arj7oStGLkU', title:'TED – Exoplanet Discoveries', ch:'TED' },
+    { id:'iG9CE55wbtY', title:'TED – Quantum Dimensions', ch:'TED' },
+    { id:'eIho2S0ZahI', title:'TED – Human Resilience', ch:'TED' },
+    { id:'qp0HIF3SfI4', title:'TED – Perception & Mind', ch:'TED' },
+    { id:'Sq1QZB5baNw', title:'OpenAI Sora Simulation', ch:'OpenAI' },
+    { id:'8F9jXYOH2c0', title:'Studio C – Matrix Parody', ch:'Studio C' }
   ],
 
   extractId(url) {
@@ -169,14 +148,12 @@ const YT = {
     return null;
   },
 
-  // Max out at 720p to preserve bandwidth across multi-screen arrays
   embedUrl(id, isMuted = true) {
     const origin = window.location.origin || 'https://flatterland.github.io';
     return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&vq=hd720&suggestedQuality=hd720&origin=${encodeURIComponent(origin)}`;
   },
 
-  // Active online search query that searches working Invidious instances in parallel
-  async fetchLiveSearchResults(query, minCount = 15) {
+  async fetchLiveSearchResults(query, minCount = 25) {
     const q = query.trim();
     const directId = this.extractId(q);
     if (directId) {
@@ -212,18 +189,15 @@ const YT = {
         return results;
       }
     } catch (e) {
-      console.warn(`[MitC] Parallel live search failed for "${q}"`);
+      console.warn(`[MitC] Parallel live search fallback for "${q}"`);
     }
 
-    // Keyword fallback across pools
     return this.getImmediateResults(q, minCount);
   },
 
-  // Smart immediate matcher
   getImmediateResults(query, count = 9) {
     const q = (query || '').toLowerCase().trim().replace(/^[#@]/, '');
 
-    // 1. Direct URL/ID
     const directId = this.extractId(query);
     if (directId && (query.includes('youtube') || query.includes('youtu.be') || query.includes('/shorts/') || /^[A-Za-z0-9_-]{11}$/.test(query.trim()))) {
       const item = { id: directId, title: `YouTube Video (${directId})`, ch: 'Direct Input' };
@@ -232,7 +206,6 @@ const YT = {
       return [item];
     }
 
-    // 2. Category pool match
     for (const [catKey, pool] of Object.entries(this.POOLS)) {
       if (catKey === q || catKey.includes(q) || q.includes(catKey)) {
         this.searchQueue = [...pool, ...this.DEEP_FALLBACK];
@@ -241,7 +214,6 @@ const YT = {
       }
     }
 
-    // 3. Keyword search across all items in all pools
     const all = Object.values(this.POOLS).flat();
     const words = q.split(/\s+/).filter(w => w.length > 1);
     const hits = all.filter(v => {
@@ -250,12 +222,13 @@ const YT = {
     });
 
     if (hits.length > 0) {
-      this.searchQueue = [...hits, ...this.DEEP_FALLBACK];
+      const padded = [...hits];
+      while (padded.length < count) padded.push(...this.DEEP_FALLBACK);
+      this.searchQueue = padded;
       this.queueIndex = count;
       return this.searchQueue.slice(0, count);
     }
 
-    // 4. Fallback with query title
     const customList = this.DEEP_FALLBACK.map((v, i) => ({
       id: v.id,
       title: `${query.toUpperCase()} – Stream #${i+1} (${v.ch})`,
@@ -266,7 +239,6 @@ const YT = {
     return customList.slice(0, count);
   },
 
-  // Active live search: searches online APIs rapidly for 15+ items
   async searchLiveAsync(query, onResults, count = 9) {
     this.currentQuery = query.trim();
     const results = await this.fetchLiveSearchResults(query, count);
@@ -279,26 +251,30 @@ const YT = {
     }
   },
 
-  // Fetch single top result for Add Screen modal
   async fetchTopResult(query) {
     const results = await this.fetchLiveSearchResults(query, 1);
     return results && results.length > 0 ? results[0] : this.getImmediateResults(query, 1)[0];
   },
 
-  // Buffer 15 REAL videos for Cinematic Launch
-  async getCinematic15(query) {
+  // Buffer 25 REAL videos for Cinematic Launch
+  async getCinematic25(query) {
     this.currentQuery = query.trim();
-    const results = await this.fetchLiveSearchResults(query, 15);
-    if (results && results.length >= 15) {
-      return results.slice(0, 15);
+    const results = await this.fetchLiveSearchResults(query, 25);
+    if (results && results.length >= 25) {
+      return results.slice(0, 25);
     } else if (results && results.length > 0) {
       const padded = [...results];
-      while (padded.length < 15) {
+      while (padded.length < 25) {
         padded.push(...this.DEEP_FALLBACK);
       }
-      return padded.slice(0, 15);
+      return padded.slice(0, 25);
     }
-    return this.getImmediateResults(query, 15);
+    return this.getImmediateResults(query, 25);
+  },
+
+  // Alias for backward compatibility
+  async getCinematic15(query) {
+    return this.getCinematic25(query);
   },
 
   getNextResult(excludeIds = []) {

@@ -1,309 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Man in the Chair – 3D Holographic YouTube Command Deck</title>
-    <link rel="stylesheet" href="./static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAN IN THE CHAIR · 3D Multi-Stream Command Deck</title>
+  <link rel="stylesheet" href="static/style.css" />
 </head>
 <body>
 
-    <!-- 3D Holographic Viewport -->
-    <div id="viewport">
-        <div class="floor-grid"></div>
-        <div id="screens-cluster"></div>
+  <!-- 3D VIEWPORT -->
+  <div id="viewport">
+    <div class="floor-grid"></div>
+    <div id="screens-cluster"></div>
+  </div>
+
+  <!-- FLOATING RESTORE UI BUTTON (Visible when UI is hidden) -->
+  <button id="ui-restore-btn" style="display: none;">👁️ RESTORE UI [H]</button>
+
+  <!-- TOP HUD -->
+  <header class="top-hud">
+    <div class="brand">
+      <span class="brand-icon">🪑</span>
+      <div>
+        <div class="brand-name">MAN IN THE CHAIR</div>
+        <div class="brand-sub">HOLOGRAPHIC YOUTUBE COMMAND DECK</div>
+      </div>
     </div>
 
-    <!-- Cinematic Active Mode Overlay -->
-    <div id="cinematic-overlay" style="display:none;">
-        <div class="cinematic-hud">
-            <span class="cinematic-rec-dot">● REC</span>
-            <div id="cinematic-banner">INITIALIZING CINEMATIC SEQUENCE</div>
-            <button class="cinematic-exit-btn" id="btn-cinematic-exit">EXIT CINEMATIC [ESC]</button>
-        </div>
+    <!-- MAIN SEARCH BAR -->
+    <form class="search-bar" id="search-form">
+      <input type="text" id="search-input" placeholder="Search topic or paste YouTube link..." autocomplete="off" />
+      <button type="submit">PROJECT 9</button>
+    </form>
 
-        <!-- 5-Second Buffer Windup Countdown Display -->
-        <div class="cinematic-windup-box" id="cinematic-windup-box" style="display:none;">
-            <div class="windup-title">BUFFERING 15 HIGH-DEF STREAMS</div>
-            <div class="windup-timer" id="windup-timer-text">5.0s</div>
-            <div class="windup-sub" id="windup-sub-text">PRE-HEATING MATRIX IFRAME BUFFERS...</div>
-            <div class="windup-progress-bar">
-                <div class="windup-progress-fill" id="windup-progress-fill"></div>
-            </div>
-        </div>
+    <!-- RIGHT HUD ACTIONS -->
+    <div class="hud-controls">
+      <button class="hud-btn highlight-btn" id="btn-cinematic" title="Trigger Cinematic Experience">🎬 CINEMATIC</button>
+      <button class="hud-btn" id="btn-visual-fx" title="Hologram Shaders & Visual Controls">✨ VISUAL FX</button>
+      <button class="hud-btn" id="btn-playlist" title="Active Streams List">📋 QUEUE</button>
+      <button class="hud-btn" id="btn-mixer" title="Audio Mixer & Spatial Falloff">🎚️ MIXER</button>
+      <button class="hud-btn add-btn" id="btn-add" title="Deploy custom stream">➕ ADD</button>
+      <button class="hud-btn" id="btn-mute-all" title="Master Audio Toggle">🔇 MUTE ALL</button>
+      <button class="hud-btn" id="btn-hide-ui" title="Hide User Interface [H]">👁️ HIDE</button>
+    </div>
+  </header>
+
+  <!-- CATEGORY PILLS BAR -->
+  <nav class="pills-bar" id="pills-bar">
+    <button class="pill active" data-cat="space">🚀 Space & NASA</button>
+    <button class="pill" data-cat="ai">🤖 AI & Robotics</button>
+    <button class="pill" data-cat="nature">🌿 Deep Ocean & Earth</button>
+    <button class="pill" data-cat="f1">🏎️ Formula 1 & Racing</button>
+    <button class="pill" data-cat="cyberpunk">🌆 Cyberpunk & Synth</button>
+    <button class="pill" data-cat="gaming">🎮 Gaming & UE5 Tech</button>
+    <button class="pill" data-cat="cats">🐱 Slow-Mo Animals</button>
+    <button class="pill" data-cat="music">🎵 Top Global Music</button>
+  </nav>
+
+  <!-- VISUAL FX DRAWER (Left) -->
+  <aside class="side-panel left-drawer" id="visual-fx-panel">
+    <div class="panel-title-row">
+      <span>✨ VISUAL ELEMENTS & SHADERS</span>
+      <button class="panel-close-btn" id="visual-fx-close">✕</button>
     </div>
 
-    <!-- UI Restore Floating Button (Visible only when UI is hidden) -->
-    <button id="ui-restore-btn" style="display:none;" title="Show Interface [H]">👁️ SHOW UI</button>
-
-    <!-- Top HUD Bar -->
-    <div class="top-hud">
-        <div class="brand">
-            <span class="brand-icon">💺</span>
-            <div>
-                <div class="brand-name">MAN IN THE CHAIR</div>
-                <div class="brand-sub">3D HOLOGRAPHIC COMMAND DECK</div>
-            </div>
-        </div>
-
-        <form class="search-bar" id="search-form">
-            <span class="search-icon">🔍</span>
-            <input id="search-input" type="text" placeholder="Search real YouTube topic (e.g. 'SpaceX', 'Formula 1', 'Cyberpunk')..." autocomplete="off" />
-            <button type="submit" id="search-btn">SCAN</button>
-        </form>
-
-        <div class="hud-controls">
-            <button class="hud-btn highlight-btn" id="btn-cinematic" title="Launch Cinematic Sequences">🎬 CINEMATIC</button>
-            <button class="hud-btn" id="btn-visual-fx" title="Visual FX, Shaders, DoF & Scanlines">✨ VISUAL FX</button>
-            <button class="hud-btn" id="btn-playlist">📋 STREAMS</button>
-            <button class="hud-btn" id="btn-mixer">🎛️ VOL MIXER</button>
-            <button class="hud-btn" id="btn-mute-all">🔇 MUTE ALL</button>
-            <button class="hud-btn add-btn" id="btn-add">➕ ADD SCREEN</button>
-            <button class="hud-btn" id="btn-hide-ui" title="Hide UI [H]">👁️ HIDE</button>
-            <button class="hud-btn" id="btn-reset-cam">🎯 RESET CAM</button>
-            <button class="hud-btn cam-btn active" data-cam="chair">💺 CHAIR</button>
-            <button class="hud-btn cam-btn" data-cam="tactical">🛰 TACTICAL</button>
-            <button class="hud-btn cam-btn" data-cam="orbit">🎥 ORBIT</button>
-        </div>
+    <!-- Theme Shaders -->
+    <div class="vfx-section">
+      <div class="vfx-label">COLOR THEME & VECTOR SHADERS</div>
+      <div class="theme-grid">
+        <button class="theme-btn active" data-theme="cyber">CYBER</button>
+        <button class="theme-btn" data-theme="green-vector">MATRIX 🟢</button>
+        <button class="theme-btn" data-theme="amber-tactical">AMBER 🟠</button>
+        <button class="theme-btn" data-theme="cyan-holo">CYAN 🔵</button>
+        <button class="theme-btn" data-theme="synthwave">SYNTH 🟣</button>
+      </div>
     </div>
 
-    <!-- Category Quick Pills -->
-    <div class="pills-bar">
-        <button class="pill active" data-cat="space">🚀 Space</button>
-        <button class="pill" data-cat="ai">🤖 AI & Robotics</button>
-        <button class="pill" data-cat="nature">🌿 Nature</button>
-        <button class="pill" data-cat="cats">🐱 Cats</button>
-        <button class="pill" data-cat="cyberpunk">🌆 Cyberpunk</button>
-        <button class="pill" data-cat="f1">🏎️ Formula 1</button>
-        <button class="pill" data-cat="gaming">🎮 Gaming</button>
-        <button class="pill" data-cat="music">🎵 Music</button>
+    <!-- Layout Density / Screen Spacing -->
+    <div class="vfx-section">
+      <div class="vfx-label">SCREEN SPACING & GRID DENSITY</div>
+      <div class="slider-group">
+        <label>Spacing</label>
+        <input type="range" id="sl-screen-spacing" min="0.4" max="1.8" step="0.05" value="1.0" />
+        <span id="spacing-val">1.0x</span>
+      </div>
     </div>
 
-    <!-- Left Drawer: Now Playing Streams List -->
-    <div class="side-panel left-drawer" id="playlist-panel">
-        <div class="panel-title-row">
-            <span>📋 ACTIVE VIDEO STREAMS (9 DEPLOYED)</span>
-            <button class="panel-close-btn" id="playlist-close">✕</button>
-        </div>
-        <div class="playlist-sub" id="playlist-queue-info">Loading active streams...</div>
-        <div class="playlist-scroll" id="playlist-list">
-            <!-- Populated dynamically -->
-        </div>
+    <!-- Optical Depth of Field (DoF) -->
+    <div class="vfx-section">
+      <div class="vfx-label">OPTICAL DEPTH OF FIELD (DOF)</div>
+      <div class="mixer-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="chk-dof-enable" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Dynamic Distance Blur</span>
+      </div>
+      <div class="slider-group">
+        <label>Blur Px</label>
+        <input type="range" id="sl-dof-strength" min="1" max="14" step="1" value="6" />
+      </div>
     </div>
 
-    <!-- Right Drawer: Visual Elements & Shaders Panel -->
-    <div class="side-panel right-drawer" id="visual-fx-panel">
-        <div class="panel-title-row">
-            <span>✨ VISUAL ELEMENTS & SHADERS</span>
-            <button class="panel-close-btn" id="visual-fx-close">✕</button>
-        </div>
-        
-        <div class="vfx-section">
-            <div class="vfx-label">HOLOGRAPHIC COLOR THEME</div>
-            <div class="theme-grid">
-                <button class="theme-btn active" data-theme="cyber">🎨 CYBER</button>
-                <button class="theme-btn" data-theme="green-vector">🟢 MATRIX</button>
-                <button class="theme-btn" data-theme="amber-tactical">🟠 AMBER</button>
-                <button class="theme-btn" data-theme="cyan-holo">🔵 CYAN</button>
-                <button class="theme-btn" data-theme="synthwave">🟣 SYNTH</button>
-            </div>
-        </div>
+    <!-- Holographic Scanlines & Grid -->
+    <div class="vfx-section">
+      <div class="vfx-label">HOLOGRAPHIC SCANLINES & ENVIRONMENT</div>
+      <div class="mixer-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="chk-scanlines-enable" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">CRT Scanline Mesh</span>
+      </div>
+      <div class="slider-group">
+        <label>Scanlines</label>
+        <input type="range" id="sl-scanlines-opacity" min="0" max="0.6" step="0.02" value="0.22" />
+      </div>
+      <div class="slider-group">
+        <label>Floor Grid</label>
+        <input type="range" id="sl-floor-brightness" min="0" max="1.5" step="0.05" value="1.0" />
+      </div>
+    </div>
+  </aside>
 
-        <div class="vfx-section">
-            <div class="vfx-label">GRID & SCREEN SPACING</div>
-            <div class="slider-group">
-                <label>SPACING</label>
-                <input type="range" id="sl-screen-spacing" min="0.4" max="1.8" step="0.05" value="1.0" />
-                <span id="spacing-val">1.0x</span>
-            </div>
-        </div>
+  <!-- ACTIVE STREAMS QUEUE PANEL (Left) -->
+  <aside class="side-panel left-drawer" id="playlist-panel">
+    <div class="panel-title-row">
+      <span>📋 PROJECTED FEEDS (<span id="stat-count">9</span>)</span>
+      <button class="panel-close-btn" id="playlist-close">✕</button>
+    </div>
+    <div class="playlist-sub" id="playlist-queue-info">Fetching live queue...</div>
+    <div class="playlist-scroll" id="playlist-list"></div>
+  </aside>
 
-        <div class="vfx-section">
-            <div class="vfx-label">DEPTH OF FIELD (DOF) & FOCUS BLUR</div>
-            <div class="mixer-toggle-row">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="chk-dof-enable" />
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Enable 3D Depth-of-Field Blur</span>
-            </div>
-            <div class="slider-group" style="margin-top:6px;">
-                <label>BLUR</label>
-                <input type="range" id="sl-dof-strength" min="1" max="12" step="1" value="6" />
-            </div>
-        </div>
-
-        <div class="vfx-section">
-            <div class="vfx-label">CRT SCANLINES & PHOSPHOR GLOW</div>
-            <div class="mixer-toggle-row">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="chk-scanlines-enable" checked />
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Holographic Scanlines</span>
-            </div>
-            <div class="slider-group" style="margin-top:6px;">
-                <label>OPACITY</label>
-                <input type="range" id="sl-scanlines-opacity" min="0.05" max="0.5" step="0.02" value="0.22" />
-            </div>
-            <div class="slider-group">
-                <label>FLOOR</label>
-                <input type="range" id="sl-floor-brightness" min="0.1" max="1.0" step="0.05" value="1.0" />
-            </div>
-        </div>
+  <!-- AUDIO MIXER & SPATIAL AUDIO PANEL (Right) -->
+  <aside class="side-panel right-drawer" id="mixer-panel">
+    <div class="panel-title-row">
+      <span>🎚️ MULTI-CHANNEL AUDIO & SPATIAL ACOUSTICS</span>
+      <button class="panel-close-btn" id="mixer-close">✕</button>
     </div>
 
-    <!-- Right Drawer: Audio / Volume & Spatial Mixer Panel -->
-    <div class="side-panel right-drawer" id="mixer-panel">
-        <div class="panel-title-row">
-            <span>🎛️ MULTI-STREAM & SPATIAL MIXER</span>
-            <button class="panel-close-btn" id="mixer-close">✕</button>
-        </div>
-        
-        <div class="mixer-master-box">
-            <div class="master-row">
-                <span class="master-label">MASTER VOLUME</span>
-                <span id="master-vol-val">100%</span>
-            </div>
-            <input type="range" id="sl-master-vol" min="0" max="100" value="100" />
-            <div class="mixer-toggle-row">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="chk-solo-mode" checked />
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Solo mode (unmuting one mutes others)</span>
-            </div>
-        </div>
-
-        <!-- 3D Spatial Audio Section -->
-        <div class="spatial-audio-box">
-            <div class="spatial-header">
-                <span class="spatial-title">🔊 3D SPATIAL AUDIO POSITIONING</span>
-            </div>
-            <div class="mixer-toggle-row">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="chk-spatial-enable" checked />
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Auto-mix by relative camera distance</span>
-            </div>
-            <div class="slider-group" style="margin-top:6px;">
-                <label>FALLOFF</label>
-                <input type="range" id="sl-spatial-sep" min="0.2" max="2.5" step="0.1" value="1.0" />
-            </div>
-            <div class="mixer-toggle-row" style="margin-top:6px;">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="chk-single-priority" />
-                    <span class="toggle-slider"></span>
-                </label>
-                <span class="toggle-label">Single video priority dominance</span>
-            </div>
-        </div>
-
-        <div class="mixer-strips-scroll" id="mixer-strips">
-            <!-- Populated dynamically -->
-        </div>
+    <!-- Master & Solo Mode -->
+    <div class="mixer-master-box">
+      <div class="master-row">
+        <span>MASTER VOLUME</span>
+        <span id="master-vol-val">100%</span>
+      </div>
+      <input type="range" id="sl-master-vol" min="0" max="100" value="100" style="width:100%; accent-color: var(--cyan);" />
+      <div class="mixer-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="chk-solo-mode" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Solo Mode (Unmuting one mutes others)</span>
+      </div>
     </div>
 
-    <!-- Right Panel: Screen Spatial Adjuster -->
-    <div class="side-panel right-drawer" id="adj-panel">
-        <div class="panel-title-row">
-            <span id="adj-screen-label">SCREEN #01 CALIBRATION</span>
-            <button class="panel-close-btn" id="adj-close">✕</button>
-        </div>
-        <div class="slider-group">
-            <label>SCALE</label>
-            <input type="range" id="sl-scale" min="0.4" max="2.2" step="0.05" value="1" />
-        </div>
-        <div class="slider-group">
-            <label>OFFSET X</label>
-            <input type="range" id="sl-x" min="-700" max="700" step="10" value="0" />
-        </div>
-        <div class="slider-group">
-            <label>OFFSET Y</label>
-            <input type="range" id="sl-y" min="-400" max="400" step="10" value="0" />
-        </div>
-        <div class="slider-group">
-            <label>DEPTH Z</label>
-            <input type="range" id="sl-z" min="-400" max="400" step="10" value="0" />
-        </div>
-        <div class="slider-group">
-            <label>ANGLE Y</label>
-            <input type="range" id="sl-rot" min="-60" max="60" step="2" value="0" />
-        </div>
-        <div class="panel-actions">
-            <button class="panel-btn" id="adj-save">💾 SAVE LAYOUT</button>
-            <button class="panel-btn" id="adj-load">↺ LOAD</button>
-            <button class="panel-btn danger" id="adj-remove">🗑 REMOVE</button>
-        </div>
+    <!-- 3D Spatial Audio Positioning -->
+    <div class="spatial-audio-box">
+      <div class="spatial-header">🛰️ 3D SPATIAL PROXIMITY MIXER</div>
+      <div class="mixer-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="chk-spatial-enable" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Auto-mix volume by Camera Distance</span>
+      </div>
+      <div class="slider-group">
+        <label>Falloff Sep</label>
+        <input type="range" id="sl-spatial-sep" min="0.2" max="2.5" step="0.1" value="1.0" />
+      </div>
+      <div class="mixer-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="chk-single-priority" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Single Video Dominance Priority</span>
+      </div>
     </div>
 
-    <!-- Bottom Cockpit Bar -->
-    <div class="bottom-bar">
-        <span class="stat">ACTIVE SCREENS: <strong id="stat-count">9</strong></span>
-        <div class="layout-btns">
-            <button class="layout-btn active" data-layout="dome">DOME</button>
-            <button class="layout-btn" data-layout="flat">FLAT</button>
-            <button class="layout-btn" data-layout="ring">360°</button>
+    <!-- Per-Screen Audio Faders -->
+    <div class="mixer-strips-scroll" id="mixer-strips"></div>
+  </aside>
+
+  <!-- SCREEN SPATIAL ADJUSTER PANEL (Right) -->
+  <aside class="side-panel right-drawer" id="adj-panel">
+    <div class="panel-title-row">
+      <span id="adj-screen-label">SCREEN ADJUSTER</span>
+      <button class="panel-close-btn" id="adj-close">✕</button>
+    </div>
+    <div class="slider-group">
+      <label>Scale</label>
+      <input type="range" id="sl-scale" min="0.3" max="2.4" step="0.05" value="1" />
+    </div>
+    <div class="slider-group">
+      <label>X-Offset</label>
+      <input type="range" id="sl-x" min="-1200" max="1200" step="10" value="0" />
+    </div>
+    <div class="slider-group">
+      <label>Y-Offset</label>
+      <input type="range" id="sl-y" min="-700" max="700" step="10" value="0" />
+    </div>
+    <div class="slider-group">
+      <label>Depth (Z)</label>
+      <input type="range" id="sl-z" min="-800" max="400" step="10" value="0" />
+    </div>
+    <div class="slider-group">
+      <label>Angle (Y)</label>
+      <input type="range" id="sl-rot" min="-60" max="60" step="1" value="0" />
+    </div>
+    <div class="panel-actions">
+      <button class="panel-btn" id="adj-save">💾 Save</button>
+      <button class="panel-btn" id="adj-load">📂 Load</button>
+      <button class="panel-btn danger" id="adj-remove">🗑 Remove</button>
+    </div>
+  </aside>
+
+  <!-- BOTTOM STATUS & CAMERA BAR -->
+  <footer class="bottom-bar">
+    <div class="stat">MODE: <strong id="stat-cam">CHAIR</strong></div>
+    <div class="layout-btns">
+      <button class="layout-btn active" data-layout="dome">DOME 3×3</button>
+      <button class="layout-btn" data-layout="flat">FLAT WALL</button>
+      <button class="layout-btn" data-layout="ring">360° RING</button>
+    </div>
+    <div class="layout-btns">
+      <button class="hud-btn sm cam-btn active" data-cam="chair">CHAIR</button>
+      <button class="hud-btn sm cam-btn" data-cam="orbit">ORBIT</button>
+      <button class="hud-btn sm cam-btn" data-cam="tactical">TACTICAL</button>
+      <button class="hud-btn sm" id="btn-spin-toggle">🔄 SPIN</button>
+      <button class="hud-btn sm" id="btn-reset-cam">🎯 CENTER</button>
+      <button class="hud-btn sm" id="btn-reset-layout">↺ RESET</button>
+    </div>
+  </footer>
+
+  <!-- ADD SCREEN MODAL -->
+  <div class="modal-back" id="add-modal">
+    <div class="modal">
+      <div class="modal-title">DEPLOY CUSTOM STREAM</div>
+      <div class="modal-sub">Enter any topic or paste a direct YouTube video URL:</div>
+      <input type="text" id="modal-input" placeholder="e.g. quantum physics or https://youtube.com/..." autocomplete="off" />
+      <div class="modal-btns">
+        <button class="panel-btn confirm" id="modal-confirm">PROJECT STREAM</button>
+        <button class="panel-btn" id="modal-cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINEMATIC LAUNCHER MODAL -->
+  <div class="modal-back" id="cinematic-modal">
+    <div class="modal cinematic-modal-box">
+      <div class="modal-title">🎬 LAUNCH CINEMATIC ORCHESTRATION</div>
+      <div class="modal-sub">Choose a cinematic flight sequence (preheats streams with 5-second buffer countdown):</div>
+      <input type="text" id="cinematic-input" placeholder="Enter topic (e.g. Deep Space, Cyberpunk, F1)..." autocomplete="off" />
+      
+      <div class="cinematic-options-grid">
+        <div class="cin-opt-card" data-opt="1">
+          <div class="cin-opt-title">🌟 OPTION 1: 25-STREAM COSMIC CONSTELLATION</div>
+          <div class="cin-opt-desc">Starts from pure black with hero video in close-up. Over 52s, camera glides back as 25 feeds dissolve into floating multi-tiered depth with distance-based darkness shading.</div>
         </div>
-        <button class="hud-btn sm" id="btn-spin-toggle" title="Toggle 360 Carousel Rotation">🔄 SPIN</button>
-        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET</button>
+        <div class="cin-opt-card" data-opt="2">
+          <div class="cin-opt-title">🌪️ OPTION 2: 360° CYLINDRICAL VORTEX WARP</div>
+          <div class="cin-opt-desc">Rapid vertical spin through a towering cylindrical vortex of live streams that decelerates into an orbital panoramic glide.</div>
+        </div>
+        <div class="cin-opt-card" data-opt="3">
+          <div class="cin-opt-title">🟢 OPTION 3: TACTICAL MATRIX DEPLOYMENT</div>
+          <div class="cin-opt-desc">Transforms the environment into green monochrome vector shaders as streams sequentially lock onto a high-density tactical array.</div>
+        </div>
+        <div class="cin-opt-card" data-opt="4">
+          <div class="cin-opt-title">🎯 OPTION 4: SPOTLIGHT ACOUSTIC FLY-AROUND</div>
+          <div class="cin-opt-desc">Camera performs an acoustic slalom flight around individual screens in 3D space, highlighting each audio channel dynamically.</div>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="panel-btn" id="cinematic-cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINEMATIC RUNNING OVERLAY & 5S COUNTDOWN -->
+  <div id="cinematic-overlay" style="display: none;">
+    <div class="cinematic-hud">
+      <div class="cinematic-rec-dot">● CINEMATIC ACTIVE</div>
+      <div id="cinematic-banner">ORCHESTRATING 25 HD STREAMS</div>
+      <button class="cinematic-exit-btn" id="btn-cinematic-exit">EXIT CINEMATIC [ESC]</button>
     </div>
 
-    <!-- Add Screen Modal -->
-    <div class="modal-back" id="add-modal">
-        <div class="modal">
-            <div class="modal-title">➕ ADD YOUTUBE SCREEN</div>
-            <div class="modal-sub">Enter any search topic (e.g. "Formula 1", "Cyberpunk 4K") or paste URL</div>
-            <input id="modal-input" type="text" placeholder="e.g. 'Formula 1', 'Cyberpunk city', or paste URL..." />
-            <div class="modal-btns">
-                <button class="panel-btn confirm" id="modal-confirm">DEPLOY TO MATRIX</button>
-                <button class="panel-btn" id="modal-cancel">CANCEL</button>
-            </div>
-        </div>
+    <!-- 5-Second Buffer Windup Countdown Banner -->
+    <div class="cinematic-windup-box" id="cinematic-windup-box" style="display: none;">
+      <div class="windup-title">PREHEATING & BUFFERING 25 HD STREAMS</div>
+      <div class="windup-timer" id="windup-timer-text">5.0s</div>
+      <div class="windup-sub">Synchronizing audio channels & optical perspective...</div>
+      <div class="windup-progress-bar">
+        <div class="windup-progress-fill" id="windup-progress-fill"></div>
+      </div>
     </div>
 
-    <!-- Cinematic Sequences Launcher Modal -->
-    <div class="modal-back" id="cinematic-modal">
-        <div class="modal cinematic-modal-box">
-            <div class="modal-title">🎬 LAUNCH CINEMATIC 15-STREAM EXPERIENCE</div>
-            <div class="modal-sub">Buffers 15 streams (5-second preheat) and initiates choreographed camera & multi-audio ignition</div>
-            
-            <input id="cinematic-input" type="text" placeholder="Enter topic or leave blank for current category..." />
-            
-            <div class="cinematic-options-grid">
-                <button class="cin-opt-card" data-opt="1">
-                    <div class="cin-opt-title">🌟 OPTION 1: DRAMATIC ZOOM OUT (PURE BLACK)</div>
-                    <div class="cin-opt-desc">Pure pitch black background. Fades into single center video with loud clear audio. Lingers 12s in close-up, then executes an ultra-slow dramatic pull-back as 14 surrounding screens ignite in expanding rings with escalating layered sound.</div>
-                </button>
+    <div></div>
+  </div>
 
-                <button class="cin-opt-card" data-opt="2">
-                    <div class="cin-opt-title">🌀 OPTION 2: 360° VORTEX WARP</div>
-                    <div class="cin-opt-desc">Rapid cylindrical spinning ascension through a 15-stream vortex, easing down into an orbital command glide.</div>
-                </button>
+  <!-- FLOATING NOTIFICATION TOAST -->
+  <div class="toast" id="toast"></div>
 
-                <button class="cin-opt-card" data-opt="3">
-                    <div class="cin-opt-title">🟢 OPTION 3: TACTICAL MATRIX DEPLOYMENT</div>
-                    <div class="cin-opt-desc">Activates green vector phosphor mode with a cascading grid drop-in and high-altitude tactical fly-through.</div>
-                </button>
-
-                <button class="cin-opt-card" data-opt="4">
-                    <div class="cin-opt-title">🛰️ OPTION 4: SPOTLIGHT FLY-AROUND</div>
-                    <div class="cin-opt-desc">Figure-8 orbit with dynamic acoustic spotlighting that boosts the nearest screen as the camera swoops past.</div>
-                </button>
-            </div>
-
-            <div class="modal-btns">
-                <button class="panel-btn" id="cinematic-cancel">CANCEL</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div class="toast" id="toast"></div>
-
-    <script src="./static/youtube_engine.js"></script>
-    <script src="./static/viewport.js"></script>
-    <script src="./static/app.js"></script>
+  <!-- JAVASCRIPT MODULES -->
+  <script src="static/youtube_engine.js"></script>
+  <script src="static/viewport.js"></script>
+  <script src="static/app.js"></script>
 </body>
 </html>

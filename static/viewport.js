@@ -265,7 +265,7 @@ function rebuildDOM() {
 
 // ── Dynamic 3D Layout Engine ───────────────────────────────────────────────
 function applyLayout() {
-  if (isCinematicRunning) return; // Do not disturb cinematic coordinates
+  if (isCinematicRunning) return;
   const n = screens.length;
   if (n === 0) return;
 
@@ -273,11 +273,11 @@ function applyLayout() {
   if (n <= 2) cols = n;
   else if (n <= 4) cols = 2;
   else if (n <= 9) cols = 3;
-  else if (n <= 12) cols = 4;
+  else if (n <= 16) cols = 4;
   else cols = 5;
 
   const rows = Math.ceil(n / cols);
-  const scaleMod = n > 9 ? 0.84 : 1.0;
+  const scaleMod = n > 12 ? 0.76 : (n > 9 ? 0.84 : 1.0);
 
   screens.forEach((s, i) => {
     if (!s.el) return;
@@ -291,8 +291,8 @@ function applyLayout() {
       const colOffset = col - (cols - 1) / 2;
       const rowOffset = row - (rows - 1) / 2;
 
-      const angleY = colOffset * (cols > 3 ? 20 : 25) + c.rot;
-      const angleX = -rowOffset * 9;
+      const angleY = colOffset * (cols > 3 ? 18 : 25) + c.rot;
+      const angleX = -rowOffset * 8;
 
       const xOff = colOffset * (465 * screenSpacing * scaleMod) + c.x;
       const yOff = rowOffset * (285 * screenSpacing * scaleMod) + c.y;
@@ -317,7 +317,7 @@ function applyLayout() {
 
     } else if (layout === 'ring') {
       const baseAngle = (i / n) * 360 + ringSpinAngle + c.rot;
-      const radius = Math.max(680, n * 75 * screenSpacing) + c.z;
+      const radius = Math.max(680, n * 65 * screenSpacing) + c.z;
 
       let yTier = 0;
       if (n > 8) {
@@ -391,7 +391,7 @@ function updateSpatialAudioAndDoF() {
         const blurPx = Math.min(visualFX.dofStrength, (delta / 450) * visualFX.dofStrength);
         s.el.style.filter = blurPx > 0.6 ? `blur(${blurPx.toFixed(1)}px)` : 'none';
       }
-    } else if (s.el && s.el.style.filter) {
+    } else if (s.el && s.el.style.filter && !isCinematicRunning) {
       s.el.style.filter = 'none';
     }
   });
@@ -866,7 +866,7 @@ function updateUILists() {
   }
 }
 
-// ── 🎬 CINEMATIC EXPERIENCES (Option 1: Ultra-Slow Flat Organic Constellation in Void) ──
+// ── 🎬 CINEMATIC EXPERIENCES (Option 1: 25-Stream Constellation with Deep Background & Distance Shading) ──
 async function launchCinematic(optionType, topic) {
   if (isCinematicRunning) return;
   isCinematicRunning = true;
@@ -887,64 +887,85 @@ async function launchCinematic(optionType, topic) {
   document.documentElement.classList.add('cinematic-blackout');
   document.body.classList.add('cinematic-blackout');
 
+  const streamCount = optionType === 1 ? 25 : 15;
+
   if (overlay) overlay.style.display = 'flex';
   if (windupBox) windupBox.style.display = 'flex';
-  if (banner) banner.textContent = `BUFFERING 15 HD STREAMS FOR "${(topic || 'TOPIC').toUpperCase()}"`;
+  if (banner) banner.textContent = `BUFFERING ${streamCount} HD STREAMS FOR "${(topic || 'TOPIC').toUpperCase()}"`;
 
-  // Fetch 15 REAL videos matching the searched topic
-  const vids15 = await YT.getCinematic15(topic || YT.currentQuery || 'space');
-  loadScreens(vids15);
+  // Fetch 25 REAL videos matching the searched topic
+  const vids = await YT.getCinematic25(topic || YT.currentQuery || 'space');
+  loadScreens(vids);
   muteAllScreensQuiet();
 
-  // Generate a randomized organic constellation layout on each run
-  // Base sectors with organic jitter so no two constellations look identical
-  const baseSectors = [
-    { bx: -390, by: -170, time: 5.5, vol: 55 },   // 2: Upper-left
-    { bx: 390,  by: 170,  time: 8.5, vol: 50 },   // 3: Lower-right
-    { bx: 380,  by: -180, time: 11.5, vol: 48 },  // 4: Upper-right
-    { bx: -400, by: 180,  time: 14.5, vol: 45 },  // 5: Lower-left
-    { bx: -690, by: -40,  time: 17.5, vol: 42 },  // 6: Left flank
-    { bx: 700,  by: 50,   time: 20.5, vol: 40 },  // 7: Right flank
-    { bx: -70,  by: -320, time: 23.5, vol: 38 },  // 8: Zenith crown
-    { bx: 80,   by: 330,  time: 26.5, vol: 38 },  // 9: Bottom pedestal
-    { bx: -590, by: -330, time: 29.5, vol: 35 },  // 10: High-left corner
-    { bx: 580,  by: -320, time: 32.5, vol: 35 },  // 11: High-right corner
-    { bx: -570, by: 330,  time: 35.5, vol: 32 },  // 12: Low-left corner
-    { bx: 610,  by: 340,  time: 38.5, vol: 32 },  // 13: Low-right corner
-    { bx: -990, by: -110, time: 41.5, vol: 30 },  // 14: Deep outer left
-    { bx: 980,  by: 120,  time: 44.5, vol: 30 },  // 15: Deep outer right
+  // ── 25 Bespoke Constellation Coordinates with Deep Background Depths (Z from 0 to -650) ──
+  const baseConstellation = [
+    // 1. Hero (0s): Dead center foreground
+    { bx: 0,    by: 0,    bz: 0,    time: 0,    vol: 100 },
+    // 2-5. Inner Ring (Foreground/Mid plane: Z ~ 0 to -50)
+    { bx: -390, by: -170, bz: -30,  time: 4.5,  vol: 55 },
+    { bx: 390,  by: 170,  bz: -40,  time: 6.5,  vol: 50 },
+    { bx: 380,  by: -180, bz: -30,  time: 8.5,  vol: 48 },
+    { bx: -400, by: 180,  bz: -50,  time: 10.5, vol: 45 },
+    // 6-9. Mid Ring (Z ~ -120 to -220)
+    { bx: -690, by: -40,  bz: -140, time: 12.5, vol: 42 },
+    { bx: 700,  by: 50,   bz: -150, time: 14.5, vol: 40 },
+    { bx: -70,  by: -320, bz: -180, time: 16.5, vol: 38 },
+    { bx: 80,   by: 330,  bz: -190, time: 18.5, vol: 38 },
+    // 10-13. Mid Corners (Z ~ -240 to -320)
+    { bx: -590, by: -330, bz: -260, time: 20.5, vol: 35 },
+    { bx: 580,  by: -320, bz: -270, time: 22.5, vol: 35 },
+    { bx: -570, by: 330,  bz: -280, time: 24.5, vol: 32 },
+    { bx: 610,  by: 340,  bz: -290, time: 26.5, vol: 32 },
+    // 14-17. Distant Wings & Outer Crown (Deep Background: Z ~ -380 to -480)
+    { bx: -990, by: -110, bz: -420, time: 28.5, vol: 30 },
+    { bx: 980,  by: 120,  bz: -430, time: 30.5, vol: 30 },
+    { bx: -350, by: -520, bz: -460, time: 32.5, vol: 28 },
+    { bx: 360,  by: -510, bz: -470, time: 34.5, vol: 28 },
+    // 18-21. Deep Pedestal & Outer Zenith (Deep Background: Z ~ -500 to -580)
+    { bx: -360, by: 520,  bz: -510, time: 36.5, vol: 28 },
+    { bx: 370,  by: 530,  bz: -520, time: 38.5, vol: 28 },
+    { bx: -1050,by: -440, bz: -560, time: 40.5, vol: 26 },
+    { bx: 1060, by: -430, bz: -570, time: 42.5, vol: 26 },
+    // 22-25. Extreme Cosmic Periphery (Deep Far Background: Z ~ -600 to -680)
+    { bx: -1070,by: 450,  bz: -620, time: 44.5, vol: 25 },
+    { bx: 1080, by: 460,  bz: -630, time: 46.5, vol: 25 },
+    { bx: 0,    by: -620, bz: -660, time: 48.5, vol: 24 },
+    { bx: 0,    by: 630,  bz: -670, time: 50.5, vol: 24 },
   ];
 
-  const flatConstellation = [
-    { x: 0, y: 0, time: 0, vol: 100 } // Hero dead center
-  ];
-
-  baseSectors.forEach(sec => {
-    // Add +/- 35px randomized organic dispersion
-    const jitterX = Math.round((Math.random() - 0.5) * 70);
-    const jitterY = Math.round((Math.random() - 0.5) * 50);
-    flatConstellation.push({
-      x: sec.bx + jitterX,
-      y: sec.by + jitterY,
-      time: sec.time,
-      vol: sec.vol
-    });
+  const flatConstellation = [];
+  baseConstellation.forEach((sec, idx) => {
+    if (idx === 0) {
+      flatConstellation.push({ x: 0, y: 0, z: 0, time: 0, vol: 100 });
+    } else {
+      const jitterX = Math.round((Math.random() - 0.5) * 60);
+      const jitterY = Math.round((Math.random() - 0.5) * 45);
+      const jitterZ = Math.round((Math.random() - 0.5) * 40);
+      flatConstellation.push({
+        x: sec.bx + jitterX,
+        y: sec.by + jitterY,
+        z: sec.bz + jitterZ,
+        time: sec.time,
+        vol: sec.vol
+      });
+    }
   });
 
-  // Target semi-transparent floating opacity
-  const HOLO_OPACITY = '0.86';
+  const HOLO_OPACITY = '0.85';
 
-  // Initialize screen positions & opacity (all scale 1, no pop in)
+  // Initialize screen positions & opacity
   screens.forEach((s, idx) => {
     const pos = flatConstellation[idx] || flatConstellation[0];
+    s.screenPos = { x: pos.x, y: pos.y, z: pos.z };
     if (s.el) {
-      s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0px) rotateY(0deg) rotateX(0deg) scale(1)`;
+      s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(1)`;
       if (idx === 0) {
         s.el.style.opacity = HOLO_OPACITY;
         s.el.style.transition = 'opacity 1.5s ease, transform 0.4s ease';
       } else {
         s.el.style.opacity = '0';
-        s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease';
+        s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease, filter 0.3s ease';
       }
     }
   });
@@ -964,6 +985,7 @@ async function launchCinematic(optionType, topic) {
     screens.forEach(s => {
       if (s.el) {
         s.el.style.opacity = '1';
+        s.el.style.filter = '';
         s.el.style.transform = '';
         s.el.style.transition = 'opacity 0.4s ease, transform 0.35s ease';
       }
@@ -1001,9 +1023,9 @@ async function launchCinematic(optionType, topic) {
 
   if (isCancelled) return;
 
-  // ── OPTION 1: FLAT ASYMMETRIC FLOATING CONSTELLATION (PURE BLACK VOID) ────────
+  // ── OPTION 1: 25-STREAM ORGANIC CONSTELLATION WITH DISTANCE DARKNESS ────────
   if (optionType === 1) {
-    if (banner) banner.textContent = `COSMIC CONSTELLATION: ${(topic || YT.currentQuery || 'SPACE').toUpperCase()}`;
+    if (banner) banner.textContent = `25-STREAM COSMIC CONSTELLATION: ${(topic || YT.currentQuery || 'SPACE').toUpperCase()}`;
 
     // Start Hero video right in center, with camera up-close at camZ = 380px to fill the frame
     const heroScreen = screens[0];
@@ -1018,23 +1040,23 @@ async function launchCinematic(optionType, topic) {
     }
 
     const sequenceStart = performance.now();
-    const lingerDuration = 5500;    // 5.5s intimate gaze on single full-frame hero video
-    const zoomDuration = 44500;     // 44.5s smooth cinematic pull-back
-    const totalDuration = lingerDuration + zoomDuration; // 50s total
+    const lingerDuration = 5000;    // 5.0s intimate gaze on hero
+    const zoomDuration = 52000;     // 52.0s grand majestic pull-back
+    const totalDuration = lingerDuration + zoomDuration; // 57s total
 
-    // Helper: Smoothly dissolves in a screen from black (opacity 0 -> 0.86, fixed scale) with audio
+    // Helper: Dissolves in screen and starts audio
     function dissolveScreenIn(idx, pos, targetVol) {
       const s = screens[idx];
       if (!s || !s.el || s._ignited) return;
       s._ignited = true;
 
-      s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease';
+      s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease, filter 0.3s ease';
       s.el.style.opacity = HOLO_OPACITY;
-      s.el.style.boxShadow = '0 0 42px rgba(0,240,255,0.4), inset 0 0 22px rgba(0,240,255,0.2)';
+      s.el.style.boxShadow = '0 0 38px rgba(0,240,255,0.35), inset 0 0 20px rgba(0,240,255,0.18)';
 
       setTimeout(() => {
         if (s.el && isCinematicRunning) {
-          s.el.style.boxShadow = '0 0 28px rgba(0,240,255,0.22), inset 0 0 16px rgba(0,240,255,0.1)';
+          s.el.style.boxShadow = '0 0 26px rgba(0,240,255,0.2), inset 0 0 14px rgba(0,240,255,0.08)';
         }
       }, 2600);
 
@@ -1046,7 +1068,7 @@ async function launchCinematic(optionType, topic) {
       const elapsed = now - sequenceStart;
       const elapsedSec = elapsed / 1000;
 
-      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 5.5s) ─────────────────────────
+      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 5.0s) ─────────────────────────
       if (elapsed <= lingerDuration) {
         const p = elapsed / lingerDuration;
         const driftPitch = Math.sin(p * Math.PI) * 1.4;
@@ -1060,10 +1082,29 @@ async function launchCinematic(optionType, topic) {
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 365 - ease * 885; // from +365 down to -520
+        curZ = 365 - ease * 980; // from +365 down to -615
         const tiltX = Math.sin(pullProgress * Math.PI) * 3;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
       }
+
+      // ── DISTANCE-BASED DARKNESS CALCULATION (Up to 50% darker for distant screens) ──
+      const eyeZ = -curZ; // Camera's depth in viewport coordinate space
+      screens.forEach((s, idx) => {
+        if (s.el && s.screenPos) {
+          const dz = Math.abs(s.screenPos.z - eyeZ);
+          const dx = s.screenPos.x;
+          const dy = s.screenPos.y;
+          const dist3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+          // Map distance (380px to 1500px) to brightness (1.0 down to 0.50)
+          const minD = 380;
+          const maxD = 1500;
+          const normDist = Math.max(0, Math.min(1, (dist3D - minD) / (maxD - minD)));
+          const brightnessVal = (1.0 - normDist * 0.50).toFixed(2); // 1.0 down to 0.50
+
+          s.el.style.filter = `brightness(${brightnessVal})`;
+        }
+      });
 
       // Check and dissolve in secondary screens as their timestamp arrives
       flatConstellation.forEach((pos, idx) => {
@@ -1076,8 +1117,8 @@ async function launchCinematic(optionType, topic) {
         requestAnimationFrame(animateConstellation);
       } else {
         isCinematicRunning = false;
-        if (banner) banner.textContent = '15-STREAM CONSTELLATION ACTIVE';
-        toast('Constellation complete: 15 Organic Feeds Running in Void');
+        if (banner) banner.textContent = '25-STREAM CONSTELLATION ACTIVE';
+        toast('Constellation complete: 25 Organic Feeds Running in Deep Void');
       }
     }
     requestAnimationFrame(animateConstellation);
