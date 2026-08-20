@@ -467,7 +467,7 @@ function unmuteScreen(idx) {
 }
 
 // Smoothly dissolves in audio volume over durationMs to match visual opacity dissolve
-function fadeAudioIn(idx, targetVol, durationMs = 2500) {
+function fadeAudioIn(idx, targetVol, durationMs = 2000) {
   const s = screens[idx];
   if (!s) return;
   s.isMuted = false;
@@ -866,7 +866,7 @@ function updateUILists() {
   }
 }
 
-// ── 🎬 CINEMATIC EXPERIENCES (Option 1: 25-Stream Constellation with Deep Background & Distance Shading) ──
+// ── 🎬 CINEMATIC EXPERIENCES (Option 1: 25-Stream Rapid-Wave Constellation) ──
 async function launchCinematic(optionType, topic) {
   if (isCinematicRunning) return;
   isCinematicRunning = true;
@@ -898,39 +898,46 @@ async function launchCinematic(optionType, topic) {
   loadScreens(vids);
   muteAllScreensQuiet();
 
-  // ── 25 Bespoke Constellation Coordinates with Deep Background Depths (Z from 0 to -380) ──
+  // ── 25 Rapid-Wave Constellation Coordinates (all clearly visible, within 20 seconds) ──
   const baseConstellation = [
-    // 1. Hero
+    // Wave 0 (T = 0s): Hero
     { bx: 0,    by: 0,    bz: 0,    time: 0,    vol: 100, b: 1.0 },
-    // Ring 1 (Inner 4)
-    { bx: -290, by: -135, bz: 0,    time: 3.5,  vol: 60,  b: 1.0 },
-    { bx: 290,  by: 135,  bz: 0,    time: 5.5,  vol: 55,  b: 1.0 },
-    { bx: 290,  by: -135, bz: 0,    time: 7.5,  vol: 50,  b: 1.0 },
-    { bx: -290, by: 135,  bz: 0,    time: 9.5,  vol: 50,  b: 1.0 },
-    // Ring 2 (Cross 4)
-    { bx: -540, by: 0,    bz: -80,  time: 11.5, vol: 45,  b: 0.90 },
-    { bx: 540,  by: 0,    bz: -80,  time: 13.5, vol: 45,  b: 0.90 },
-    { bx: 0,    by: -260, bz: -80,  time: 15.5, vol: 42,  b: 0.90 },
-    { bx: 0,    by: 260,  bz: -80,  time: 17.5, vol: 42,  b: 0.90 },
-    // Ring 3 (Mid Corners 4)
-    { bx: -520, by: -260, bz: -150, time: 19.5, vol: 38,  b: 0.80 },
-    { bx: 520,  by: -260, bz: -150, time: 21.5, vol: 38,  b: 0.80 },
-    { bx: -520, by: 260,  bz: -150, time: 23.5, vol: 36,  b: 0.80 },
-    { bx: 520,  by: 260,  bz: -150, time: 25.5, vol: 36,  b: 0.80 },
-    // Ring 4 (Outer 6)
-    { bx: -760, by: -130, bz: -230, time: 27.5, vol: 34,  b: 0.70 },
-    { bx: 760,  by: 130,  bz: -230, time: 29.5, vol: 34,  b: 0.70 },
-    { bx: 760,  by: -130, bz: -230, time: 31.5, vol: 32,  b: 0.70 },
-    { bx: -760, by: 130,  bz: -230, time: 33.5, vol: 32,  b: 0.70 },
-    { bx: -270, by: -380, bz: -240, time: 35.5, vol: 30,  b: 0.68 },
-    { bx: 270,  by: 380,  bz: -240, time: 37.5, vol: 30,  b: 0.68 },
-    // Deep Background (Far 6 - up to 50% darker!)
-    { bx: -750, by: -370, bz: -350, time: 39.5, vol: 28,  b: 0.55 },
-    { bx: 750,  by: 370,  bz: -350, time: 41.5, vol: 28,  b: 0.55 },
-    { bx: -980, by: 0,    bz: -380, time: 43.5, vol: 25,  b: 0.50 },
-    { bx: 980,  by: 0,    bz: -380, time: 45.5, vol: 25,  b: 0.50 },
-    { bx: 0,    by: -490, bz: -380, time: 47.5, vol: 25,  b: 0.50 },
-    { bx: 0,    by: 490,  bz: -380, time: 49.5, vol: 25,  b: 0.50 }
+    
+    // Wave 1 (T = 1.8s - 2.6s): Inner Top-Left & Bottom-Right
+    { bx: -320, by: -150, bz: 0,    time: 1.8,  vol: 60,  b: 1.0 },
+    { bx: 320,  by: 150,  bz: 0,    time: 2.6,  vol: 60,  b: 1.0 },
+    
+    // Wave 2 (T = 3.4s - 4.2s): Inner Top-Right & Bottom-Left
+    { bx: 320,  by: -150, bz: 0,    time: 3.4,  vol: 55,  b: 1.0 },
+    { bx: -320, by: 150,  bz: 0,    time: 4.2,  vol: 55,  b: 1.0 },
+    
+    // Wave 3 (T = 5.0s - 7.4s): Flanks & Poles
+    { bx: -580, by: 0,    bz: -40,  time: 5.0,  vol: 50,  b: 0.95 },
+    { bx: 580,  by: 0,    bz: -40,  time: 5.8,  vol: 50,  b: 0.95 },
+    { bx: 0,    by: -280, bz: -40,  time: 6.6,  vol: 48,  b: 0.95 },
+    { bx: 0,    by: 280,  bz: -40,  time: 7.4,  vol: 48,  b: 0.95 },
+    
+    // Wave 4 (T = 8.2s - 10.6s): Mid Diagonals
+    { bx: -560, by: -280, bz: -80,  time: 8.2,  vol: 45,  b: 0.90 },
+    { bx: 560,  by: -280, bz: -80,  time: 9.0,  vol: 45,  b: 0.90 },
+    { bx: -560, by: 280,  bz: -80,  time: 9.8,  vol: 45,  b: 0.90 },
+    { bx: 560,  by: 280,  bz: -80,  time: 10.6, vol: 45,  b: 0.90 },
+    
+    // Wave 5 (T = 11.4s - 15.4s): Mid-Outer Wings
+    { bx: -820, by: -140, bz: -120, time: 11.4, vol: 40,  b: 0.85 },
+    { bx: 820,  by: 140,  bz: -120, time: 12.2, vol: 40,  b: 0.85 },
+    { bx: 820,  by: -140, bz: -120, time: 13.0, vol: 40,  b: 0.85 },
+    { bx: -820, by: 140,  bz: -120, time: 13.8, vol: 40,  b: 0.85 },
+    { bx: -290, by: -420, bz: -120, time: 14.6, vol: 38,  b: 0.85 },
+    { bx: 290,  by: 420,  bz: -120, time: 15.4, vol: 38,  b: 0.85 },
+    
+    // Wave 6 (T = 16.2s - 20.2s): Deep Background Beacons
+    { bx: -800, by: -400, bz: -180, time: 16.2, vol: 35,  b: 0.80 },
+    { bx: 800,  by: 400,  bz: -180, time: 17.0, vol: 35,  b: 0.80 },
+    { bx: -800, by: 400,  bz: -180, time: 17.8, vol: 35,  b: 0.80 },
+    { bx: 800,  by: -400, bz: -180, time: 18.6, vol: 35,  b: 0.80 },
+    { bx: -1060,by: 0,    bz: -200, time: 19.4, vol: 32,  b: 0.78 },
+    { bx: 1060, by: 0,    bz: -200, time: 20.2, vol: 32,  b: 0.78 }
   ];
 
   const flatConstellation = [];
@@ -938,8 +945,8 @@ async function launchCinematic(optionType, topic) {
     if (idx === 0) {
       flatConstellation.push({ x: 0, y: 0, z: 0, time: 0, vol: 100, b: 1.0 });
     } else {
-      const jitterX = Math.round((Math.random() - 0.5) * 40);
-      const jitterY = Math.round((Math.random() - 0.5) * 30);
+      const jitterX = Math.round((Math.random() - 0.5) * 35);
+      const jitterY = Math.round((Math.random() - 0.5) * 25);
       const jitterZ = Math.round((Math.random() - 0.5) * 20);
       flatConstellation.push({
         x: sec.bx + jitterX,
@@ -952,7 +959,7 @@ async function launchCinematic(optionType, topic) {
     }
   });
 
-  const HOLO_OPACITY = '0.85';
+  const HOLO_OPACITY = '0.88';
 
   // Initialize screen positions & opacity
   screens.forEach((s, idx) => {
@@ -966,7 +973,7 @@ async function launchCinematic(optionType, topic) {
         s.el.style.transition = 'opacity 1.5s ease, transform 0.4s ease';
       } else {
         s.el.style.opacity = '0';
-        s.el.style.transition = 'opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.2s ease';
+        s.el.style.transition = 'opacity 2.0s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.0s ease';
       }
     }
   });
@@ -1024,13 +1031,13 @@ async function launchCinematic(optionType, topic) {
 
   if (isCancelled) return;
 
-  // ── OPTION 1: 25-STREAM ORGANIC CONSTELLATION WITH DISTANCE DARKNESS ────────
+  // ── OPTION 1: 25-STREAM ORGANIC CONSTELLATION ────────────────────────────────
   if (optionType === 1) {
     if (banner) banner.textContent = `25-STREAM COSMIC CONSTELLATION: ${(topic || YT.currentQuery || 'SPACE').toUpperCase()}`;
 
-    // Start Hero video right in center, with camera up-close at camZ = 380px to fill the frame
+    // Start Hero video right in center, with camera up-close at camZ = 360px to fill the frame
     const heroScreen = screens[0];
-    let curZ = 380;
+    let curZ = 360;
     vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${curZ}px)`;
 
     if (heroScreen && heroScreen.el) {
@@ -1041,9 +1048,7 @@ async function launchCinematic(optionType, topic) {
     }
 
     const sequenceStart = performance.now();
-    const lingerDuration = 4500;    // 4.5s intimate gaze on hero
-    const zoomDuration = 48000;     // 48.0s smooth cinematic pull-back
-    const totalDuration = lingerDuration + zoomDuration; // 52.5s total
+    const totalDuration = 45000; // 45s smooth cinematic pull-back
 
     // Helper: Dissolves in screen and starts audio
     function dissolveScreenIn(idx, pos, targetVol) {
@@ -1051,43 +1056,30 @@ async function launchCinematic(optionType, topic) {
       if (!s || !s.el || s._ignited) return;
       s._ignited = true;
 
-      s.el.style.transition = 'opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.2s ease';
+      s.el.style.transition = 'opacity 2.0s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.0s ease';
       s.el.style.opacity = HOLO_OPACITY;
       s.el.style.filter = `brightness(${pos.b})`;
-      s.el.style.boxShadow = '0 0 38px rgba(0,240,255,0.35), inset 0 0 20px rgba(0,240,255,0.18)';
+      s.el.style.boxShadow = '0 0 34px rgba(0,240,255,0.32), inset 0 0 18px rgba(0,240,255,0.16)';
 
       setTimeout(() => {
         if (s.el && isCinematicRunning) {
-          s.el.style.boxShadow = '0 0 26px rgba(0,240,255,0.2), inset 0 0 14px rgba(0,240,255,0.08)';
+          s.el.style.boxShadow = '0 0 24px rgba(0,240,255,0.2), inset 0 0 12px rgba(0,240,255,0.08)';
         }
-      }, 2400);
+      }, 2200);
 
-      fadeAudioIn(idx, targetVol, 2200);
+      fadeAudioIn(idx, targetVol, 2000);
     }
 
     function animateConstellation(now) {
       if (isCancelled) return;
       const elapsed = now - sequenceStart;
       const elapsedSec = elapsed / 1000;
+      const progress = Math.min(1, elapsed / totalDuration);
+      const ease = 0.5 - Math.cos(progress * Math.PI) / 2;
 
-      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 4.5s) ─────────────────────────
-      if (elapsed <= lingerDuration) {
-        const p = elapsed / lingerDuration;
-        const driftPitch = Math.sin(p * Math.PI) * 1.4;
-        const driftYaw = Math.sin(p * Math.PI * 0.7) * 1.3;
-        curZ = 380 - p * 15; // 380 to 365
-        vp.style.transform = `translate3d(0,0,0) rotateX(${driftPitch}deg) rotateY(${driftYaw}deg) translateZ(${curZ}px)`;
-
-      // ── PHASE 2: ULTRA-SLOW PULL-BACK & SEQUENTIAL SMOOTH DISSOLVES ────────
-      } else {
-        const pullElapsed = elapsed - lingerDuration;
-        const pullProgress = Math.min(1, pullElapsed / zoomDuration);
-        const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
-
-        curZ = 365 - ease * 900; // from +365 down to -535
-        const tiltX = Math.sin(pullProgress * Math.PI) * 3;
-        vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
-      }
+      curZ = 360 - ease * 920; // from +360 down to -560
+      const tiltX = Math.sin(progress * Math.PI) * 2.5;
+      vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
 
       // Check and dissolve in secondary screens as their timestamp arrives
       flatConstellation.forEach((pos, idx) => {
@@ -1101,7 +1093,7 @@ async function launchCinematic(optionType, topic) {
       } else {
         isCinematicRunning = false;
         if (banner) banner.textContent = '25-STREAM CONSTELLATION ACTIVE';
-        toast('Constellation complete: 25 Organic Feeds Running in Deep Void');
+        toast('Constellation complete: 25 Feeds Running in Deep Void');
       }
     }
     requestAnimationFrame(animateConstellation);
