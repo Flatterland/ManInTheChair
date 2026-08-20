@@ -84,7 +84,7 @@ function initViewport() {
   // Deep zoom (allows zooming right up to screens)
   window.addEventListener('wheel', e => {
     if (e.target.closest('.side-panel')) return;
-    camZ = Math.max(-850, Math.min(680, camZ - e.deltaY * 0.75));
+    camZ = Math.max(-1200, Math.min(680, camZ - e.deltaY * 0.75));
   }, { passive: true });
 
   // 6-DOF Keyboard Controls
@@ -97,7 +97,7 @@ function initViewport() {
     if (e.key === 'q') tCamX -= 30;
     if (e.key === 'e') tCamX += 30;
     if (e.key === '+' || e.key === '=') camZ = Math.min(680, camZ + 60);
-    if (e.key === '-' || e.key === '_') camZ = Math.max(-850, camZ - 60);
+    if (e.key === '-' || e.key === '_') camZ = Math.max(-1200, camZ - 60);
     if (e.key === ' ' || e.key === 'r') resetCam();
     if (e.key === 'm') toggleMasterMute();
     if (e.key === 'h' || e.key === 'H') toggleHideUI();
@@ -866,7 +866,7 @@ function updateUILists() {
   }
 }
 
-// ── 🎬 CINEMATIC EXPERIENCES (Option 1: 10s Hero Solo Gaze -> 25-Stream Grand Constellation) ──
+// ── 🎬 CINEMATIC EXPERIENCES (Option 1: 5x5 Non-Overlapping Constellation) ──
 async function launchCinematic(optionType, topic) {
   if (isCinematicRunning) return;
   isCinematicRunning = true;
@@ -898,75 +898,68 @@ async function launchCinematic(optionType, topic) {
   loadScreens(vids);
   muteAllScreensQuiet();
 
-  // ── 25 Constellation Coordinates (10s Hero Linger, then Waves from T = 10.5s to 34.5s) ──
+  // ── 25 Non-Overlapping 5x5 Grid Positions with Radial Outward Unveil Order ──
+  // Base Screen Width: 440px, Height: 260px.
+  // Col Step: 470px, Row Step: 290px (zero overlap, 30px gap).
   const baseConstellation = [
-    // Hero: Solo at T = 0s
-    { bx: 0,     by: 0,    bz: 0,    time: 0,     vol: 100, b: 1.0 },
+    // 0: Center Hero (T = 0s)
+    { bx: 0,     by: 0,    time: 0,     vol: 100, b: 1.0 },
     
-    // Wave 1 (T = 10.5s - 11.8s): 2 Inner corners
-    { bx: -330,  by: -160, bz: 0,    time: 10.5,  vol: 60,  b: 1.0 },
-    { bx: 330,   by: 160,  bz: 0,    time: 11.8,  vol: 60,  b: 1.0 },
+    // Wave 1: 4 Immediate Cross Neighbors (T = 10.5s - 13.5s)
+    { bx: 0,     by: -290, time: 10.5,  vol: 65,  b: 1.0 },  // Top
+    { bx: -470,  by: 0,    time: 11.5,  vol: 65,  b: 1.0 },  // Left
+    { bx: 470,   by: 0,    time: 12.5,  vol: 65,  b: 1.0 },  // Right
+    { bx: 0,     by: 290,  time: 13.5,  vol: 65,  b: 1.0 },  // Bottom
     
-    // Wave 2 (T = 13.0s - 14.2s): Other 2 inner corners
-    { bx: 330,   by: -160, bz: 0,    time: 13.0,  vol: 55,  b: 1.0 },
-    { bx: -330,  by: 160,  bz: 0,    time: 14.2,  vol: 55,  b: 1.0 },
+    // Wave 2: 4 Inner Diagonals (T = 15.0s - 18.0s)
+    { bx: -470,  by: -290, time: 15.0,  vol: 55,  b: 0.95 }, // Top-Left
+    { bx: 470,   by: -290, time: 16.0,  vol: 55,  b: 0.95 }, // Top-Right
+    { bx: -470,  by: 290,  time: 17.0,  vol: 55,  b: 0.95 }, // Bottom-Left
+    { bx: 470,   by: 290,  time: 18.0,  vol: 55,  b: 0.95 }, // Bottom-Right
     
-    // Wave 3 (T = 15.5s - 18.5s): 4 Cross positions (Flanks & Poles)
-    { bx: -590,  by: 0,    bz: -40,  time: 15.5,  vol: 50,  b: 0.95 },
-    { bx: 590,   by: 0,    bz: -40,  time: 16.5,  vol: 50,  b: 0.95 },
-    { bx: 0,     by: -290, bz: -40,  time: 17.5,  vol: 48,  b: 0.95 },
-    { bx: 0,     by: 290,  bz: -40,  time: 18.5,  vol: 48,  b: 0.95 },
+    // Wave 3: 4 Outer Cross Neighbors (T = 19.5s - 22.5s)
+    { bx: 0,     by: -580, time: 19.5,  vol: 45,  b: 0.88 }, // Far Top
+    { bx: -940,  by: 0,    time: 20.5,  vol: 45,  b: 0.88 }, // Far Left
+    { bx: 940,   by: 0,    time: 21.5,  vol: 45,  b: 0.88 }, // Far Right
+    { bx: 0,     by: 580,  time: 22.5,  vol: 45,  b: 0.88 }, // Far Bottom
     
-    // Wave 4 (T = 19.5s - 22.5s): 4 Mid diagonals
-    { bx: -580,  by: -290, bz: -80,  time: 19.5,  vol: 45,  b: 0.90 },
-    { bx: 580,   by: -290, bz: -80,  time: 20.5,  vol: 45,  b: 0.90 },
-    { bx: -580,  by: 290,  bz: -80,  time: 21.5,  vol: 45,  b: 0.90 },
-    { bx: 580,   by: 290,  bz: -80,  time: 22.5,  vol: 45,  b: 0.90 },
+    // Wave 4: 8 Mid-Outer Edge Screens (T = 24.0s - 29.5s)
+    { bx: -470,  by: -580, time: 24.0,  vol: 40,  b: 0.82 },
+    { bx: 470,   by: -580, time: 24.8,  vol: 40,  b: 0.82 },
+    { bx: -940,  by: -290, time: 25.6,  vol: 40,  b: 0.82 },
+    { bx: 940,   by: -290, time: 26.4,  vol: 40,  b: 0.82 },
+    { bx: -940,  by: 290,  time: 27.2,  vol: 40,  b: 0.82 },
+    { bx: 940,   by: 290,  time: 28.0,  vol: 40,  b: 0.82 },
+    { bx: -470,  by: 580,  time: 28.8,  vol: 40,  b: 0.82 },
+    { bx: 470,   by: 580,  time: 29.6,  vol: 40,  b: 0.82 },
     
-    // Wave 5 (T = 23.5s - 28.5s): 6 Outer wings & zenith/pedestal
-    { bx: -840,  by: -140, bz: -120, time: 23.5,  vol: 40,  b: 0.85 },
-    { bx: 840,   by: 140,  bz: -120, time: 24.5,  vol: 40,  b: 0.85 },
-    { bx: 840,   by: -140, bz: -120, time: 25.5,  vol: 40,  b: 0.85 },
-    { bx: -840,  by: 140,  bz: -120, time: 26.5,  vol: 40,  b: 0.85 },
-    { bx: -300,  by: -430, bz: -120, time: 27.5,  vol: 38,  b: 0.85 },
-    { bx: 300,   by: 430,  bz: -120, time: 28.5,  vol: 38,  b: 0.85 },
-    
-    // Wave 6 (T = 29.5s - 34.5s): 6 Deep background periphery
-    { bx: -820,  by: -410, bz: -180, time: 29.5,  vol: 35,  b: 0.80 },
-    { bx: 820,   by: 410,  bz: -180, time: 30.5,  vol: 35,  b: 0.80 },
-    { bx: -820,  by: 410,  bz: -180, time: 31.5,  vol: 35,  b: 0.80 },
-    { bx: 820,   by: -410, bz: -180, time: 32.5,  vol: 35,  b: 0.80 },
-    { bx: -1080, by: 0,    bz: -200, time: 33.5,  vol: 32,  b: 0.78 },
-    { bx: 1080,  by: 0,    bz: -200, time: 34.5,  vol: 32,  b: 0.78 }
+    // Wave 5: 4 Extreme Outer Corners (T = 31.0s - 34.0s)
+    { bx: -940,  by: -580, time: 31.0,  vol: 35,  b: 0.75 }, // Top-Left Corner
+    { bx: 940,   by: -580, time: 32.0,  vol: 35,  b: 0.75 }, // Top-Right Corner
+    { bx: -940,  by: 580,  time: 33.0,  vol: 35,  b: 0.75 }, // Bottom-Left Corner
+    { bx: 940,   by: 580,  time: 34.0,  vol: 35,  b: 0.75 }  // Bottom-Right Corner
   ];
 
   const flatConstellation = [];
   baseConstellation.forEach((sec, idx) => {
-    if (idx === 0) {
-      flatConstellation.push({ x: 0, y: 0, z: 0, time: 0, vol: 100, b: 1.0 });
-    } else {
-      const jitterX = Math.round((Math.random() - 0.5) * 35);
-      const jitterY = Math.round((Math.random() - 0.5) * 25);
-      const jitterZ = Math.round((Math.random() - 0.5) * 20);
-      flatConstellation.push({
-        x: sec.bx + jitterX,
-        y: sec.by + jitterY,
-        z: sec.bz + jitterZ,
-        time: sec.time,
-        vol: sec.vol,
-        b: sec.b
-      });
-    }
+    flatConstellation.push({
+      x: sec.bx,
+      y: sec.by,
+      z: 0,
+      time: sec.time,
+      vol: sec.vol,
+      b: sec.b
+    });
   });
 
   const HOLO_OPACITY = '0.88';
 
-  // Initialize screen positions & opacity
+  // Initialize screen positions & opacity (all on z = 0, zero occlusion)
   screens.forEach((s, idx) => {
     const pos = flatConstellation[idx] || flatConstellation[0];
     s.screenPos = { x: pos.x, y: pos.y, z: pos.z };
     if (s.el) {
-      s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(1)`;
+      s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,0px) rotateY(0deg) rotateX(0deg) scale(1)`;
       s.el.style.filter = `brightness(${pos.b})`;
       if (idx === 0) {
         s.el.style.opacity = HOLO_OPACITY;
@@ -1031,7 +1024,7 @@ async function launchCinematic(optionType, topic) {
 
   if (isCancelled) return;
 
-  // ── OPTION 1: 10s HERO SOLO GAZE -> 25-STREAM CONSTELLATION ────────────────
+  // ── OPTION 1: 10s HERO SOLO GAZE -> 25-STREAM 5X5 CONSTELLATION ────────────
   if (optionType === 1) {
     let ignitedCount = 1;
 
@@ -1057,6 +1050,12 @@ async function launchCinematic(optionType, topic) {
       const s = screens[idx];
       if (!s || !s.el || s._ignited) return;
       s._ignited = true;
+
+      // Ensure iframe is populated and active
+      const iframe = s.el.querySelector('iframe');
+      if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
+        iframe.src = YT.embedUrl(s.vid.id, false);
+      }
 
       s.el.style.transition = 'opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.2s ease';
       s.el.style.opacity = HOLO_OPACITY;
@@ -1100,7 +1099,8 @@ async function launchCinematic(optionType, topic) {
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 365 - ease * 930; // from +365 down to -565
+        // Pull back from +365px all the way to -960px so all 25 screens fit cleanly in view!
+        curZ = 365 - ease * 1325; // from +365 down to -960
         const tiltX = Math.sin(pullProgress * Math.PI) * 2.8;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
       }
