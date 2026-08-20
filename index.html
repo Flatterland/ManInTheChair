@@ -26,11 +26,12 @@
 
         <form class="search-bar" id="search-form">
             <span class="search-icon">🔍</span>
-            <input id="search-input" type="text" placeholder="Search real YouTube topic (e.g. 'SpaceX', 'Formula 1', 'Synthwave')..." autocomplete="off" />
+            <input id="search-input" type="text" placeholder="Search real YouTube topic (e.g. 'SpaceX', 'Formula 1', 'Cyberpunk')..." autocomplete="off" />
             <button type="submit" id="search-btn">SCAN</button>
         </form>
 
         <div class="hud-controls">
+            <button class="hud-btn fx-btn" id="btn-fx-mode" title="Toggle 3D Vector / Shader Filter">🎨 FX: CYBER</button>
             <button class="hud-btn" id="btn-playlist">📋 STREAMS</button>
             <button class="hud-btn" id="btn-mixer">🎛️ VOL MIXER</button>
             <button class="hud-btn" id="btn-mute-all">🔇 MUTE ALL</button>
@@ -132,15 +133,16 @@
             <button class="layout-btn" data-layout="flat">FLAT</button>
             <button class="layout-btn" data-layout="ring">360°</button>
         </div>
-        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET LAYOUT</button>
+        <button class="hud-btn sm" id="btn-spin-toggle" title="Toggle 360 Carousel Rotation">🔄 SPIN</button>
+        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET</button>
     </div>
 
     <!-- Add Screen Modal -->
     <div class="modal-back" id="add-modal">
         <div class="modal">
             <div class="modal-title">➕ ADD YOUTUBE SCREEN</div>
-            <div class="modal-sub">Paste any YouTube URL, video ID, or search topic</div>
-            <input id="modal-input" type="text" placeholder="e.g. https://youtube.com/watch?v=... or 'Cyberpunk 4K'" />
+            <div class="modal-sub">Paste any YouTube URL, video ID, or enter any search topic</div>
+            <input id="modal-input" type="text" placeholder="e.g. 'Formula 1', 'Cyberpunk city', or paste URL..." />
             <div class="modal-btns">
                 <button class="panel-btn confirm" id="modal-confirm">DEPLOY TO MATRIX</button>
                 <button class="panel-btn" id="modal-cancel">CANCEL</button>

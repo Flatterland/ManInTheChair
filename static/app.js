@@ -1,10 +1,16 @@
 // ─── App HUD Coordinator & Event Controller ────────────────────────────────
 let selectedIdx = null;
+let currentFxIndex = 0;
+const FX_MODES = [
+  { name: '🎨 FX: CYBER', cls: '' },
+  { name: '🟢 FX: GREEN VECTOR', cls: 'fx-green-vector' },
+  { name: '🟠 FX: AMBER HUD', cls: 'fx-amber-tactical' }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
   initViewport();
 
-  // 1. Instantly load verified screens (0ms lag, no blank screen)
+  // 1. Instantly load verified screens (0ms lag)
   const initialVids = YT.getImmediateResults('space', 6);
   loadScreens(initialVids);
 
@@ -29,6 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const cat = p.dataset.cat;
       executeSearch(cat);
     });
+  });
+
+  // ── Shader FX Switcher ───────────────────────────────────────────────────
+  const fxBtn = document.getElementById('btn-fx-mode');
+  fxBtn.addEventListener('click', () => {
+    // Remove all previous FX classes
+    FX_MODES.forEach(m => { if (m.cls) document.body.classList.remove(m.cls); });
+    currentFxIndex = (currentFxIndex + 1) % FX_MODES.length;
+    const mode = FX_MODES[currentFxIndex];
+    if (mode.cls) document.body.classList.add(mode.cls);
+    fxBtn.textContent = mode.name;
+    toast(`Hologram Shader: ${mode.name}`);
   });
 
   // ── Panel Toggles (Playlist & Mixer) ──────────────────────────────────────
@@ -89,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toast('Camera centered');
   });
 
-  // ── Layout Buttons ───────────────────────────────────────────────────────
+  // ── Layout Buttons & 360 Spin Toggle ─────────────────────────────────────
   document.querySelectorAll('.layout-btn').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.layout-btn').forEach(x => x.classList.remove('active'));
@@ -99,12 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.getElementById('btn-spin-toggle').addEventListener('click', () => {
+    toggleRingSpin();
+  });
+
   document.getElementById('btn-reset-layout').addEventListener('click', () => {
     resetLayout();
     toast('Layout reset to defaults');
   });
 
-  // ── Add Screen Modal ─────────────────────────────────────────────────────
+  // ── Add Screen Modal (Fetches matching topic accurately) ──────────────────
   document.getElementById('btn-add').addEventListener('click', () => {
     document.getElementById('add-modal').style.display = 'flex';
     document.getElementById('modal-input').focus();
@@ -112,15 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modal-cancel').addEventListener('click', () => {
     document.getElementById('add-modal').style.display = 'none';
   });
-  document.getElementById('modal-confirm').addEventListener('click', () => {
+  document.getElementById('modal-confirm').addEventListener('click', async () => {
     const val = document.getElementById('modal-input').value.trim();
     document.getElementById('add-modal').style.display = 'none';
     document.getElementById('modal-input').value = '';
     if (!val) return;
-    const vids = YT.getImmediateResults(val, 1);
-    if (vids.length) {
-      addScreen(vids[0]);
-      toast(`➕ Screen #${screens.length} added: ${vids[0].title.slice(0, 20)}...`);
+
+    toast(`🔍 Deploying screen for "${val}"...`);
+    const vid = await YT.fetchTopResult(val);
+    if (vid) {
+      addScreen(vid);
+      toast(`➕ Screen #${screens.length} deployed: ${vid.title.slice(0, 24)}...`);
     }
   });
   document.getElementById('modal-input').addEventListener('keydown', e => {
@@ -171,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Search Helper ────────────────────────────────────────────────────────────
 function executeSearch(query) {
-  glitch(300);
+  glitch(280);
   toast(`📡 SCANNING FOR "${query.toUpperCase()}"...`);
 
   // Instant response with matching/thematic results
