@@ -1,5 +1,5 @@
 
-// Universal 3D Holographic Viewport with Official Twitter / X Embeds
+// Universal 3D Holographic Viewport Engine with Real Full-Motion Video Streams
 let currentVideos = [];
 let activeScreensData = [];
 let focusedScreenIndex = null;
@@ -16,20 +16,31 @@ let targetRotX = 0, targetRotY = 0;
 let orbitAngle = 0;
 
 function initHoloViewport() {
-    console.log('[VIEWPORT] Initializing 3D Holographic Bridge with Official Twitter Embeds...');
+    console.log('[VIEWPORT] Initializing 3D Holographic Matrix Engine with Live Video Streams...');
 
     viewportEl = document.getElementById('css3d-viewport');
     screensCluster = document.getElementById('screens-cluster');
 
     setupCameraControls();
     requestAnimationFrame(renderLoop);
+
+    // Global unlock listener on first user click to satisfy browser autoplay audio rules
+    document.addEventListener('click', unlockAllVideos, { once: true });
+}
+
+function unlockAllVideos() {
+    activeScreensData.forEach(sd => {
+        if (sd.videoEl && sd.videoEl.paused) {
+            sd.videoEl.play().catch(() => {});
+        }
+    });
 }
 
 function setupCameraControls() {
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('.top-hud') || e.target.closest('.right-focus-panel') || 
             e.target.closest('.bottom-cockpit-hud') || e.target.closest('.modal-backdrop') || 
-            e.target.closest('.trending-bar') || e.target.closest('.tweet-embed-container')) {
+            e.target.closest('.trending-bar')) {
             return;
         }
         isDragging = true;
@@ -60,7 +71,7 @@ function setupCameraControls() {
     });
 
     window.addEventListener('wheel', (e) => {
-        if (e.target.closest('.right-focus-panel') || e.target.closest('.holo-screen-3d')) return;
+        if (e.target.closest('.right-focus-panel')) return;
         camPosZ -= e.deltaY * 0.5;
         camPosZ = Math.max(-400, Math.min(300, camPosZ));
     }, { passive: true });
@@ -104,7 +115,7 @@ function renderLoop() {
 }
 
 // -------------------------------------------------------------
-// Official Twitter Widget 3D Screen Hydration
+// Live Real Video 3D Screen Hydration
 // -------------------------------------------------------------
 function updateHoloScreens(items) {
     if (!items || items.length === 0) return;
@@ -116,10 +127,10 @@ function updateHoloScreens(items) {
         custom: { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
     }));
 
-    renderTwitterScreens();
+    renderLiveVideoScreens();
 }
 
-function renderTwitterScreens() {
+function renderLiveVideoScreens() {
     if (!screensCluster) screensCluster = document.getElementById('screens-cluster');
     if (!screensCluster) return;
 
@@ -130,64 +141,61 @@ function renderTwitterScreens() {
         screen.className = 'holo-screen-3d';
         screen.dataset.index = index;
 
+        // Real Autoplaying HTML5 Video Tag
+        const video = document.createElement('video');
+        video.className = 'screen-video-el';
+        video.muted = true;
+        video.defaultMuted = true;
+        video.autoplay = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute('muted', '');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('loop', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', 'auto');
+        video.src = item.video_url;
+
+        video.onerror = () => {
+            console.warn('[VIEWPORT] Stream fallback for index', index);
+            video.src = TwitterEngine.FALLBACK_BANK[index % TwitterEngine.FALLBACK_BANK.length].video_url;
+            video.play().catch(() => {});
+        };
+
+        video.play().catch(e => console.log('Autoplay standby:', e));
+        screenData.videoEl = video;
+
+        // HUD Badges & Caption Overlay
         const tagBadge = document.createElement('div');
         tagBadge.className = 'screen-tag-badge';
-        tagBadge.innerText = `3D SCREEN #0${index + 1} — TWITTER OFFICIAL`;
+        tagBadge.innerText = `FEED #0${index + 1}: ${item.author_handle || '@LiveFeed'}`;
 
-        const embedContainer = document.createElement('div');
-        embedContainer.className = 'tweet-embed-container';
-        embedContainer.id = `tweet-embed-${index}-${item.id}`;
+        const liveBadge = document.createElement('div');
+        liveBadge.className = 'screen-live-badge';
+        liveBadge.innerHTML = `<span style="font-size:8px;">●</span> LIVE`;
 
+        const captionBar = document.createElement('div');
+        captionBar.className = 'screen-caption-bar';
+        captionBar.innerHTML = `
+            <div class="screen-caption-title">${item.text || ''}</div>
+            <div class="screen-caption-meta">👁 ${item.views || '1.8M'}   ❤️ ${item.likes || '45K'}</div>
+        `;
+
+        screen.appendChild(video);
         screen.appendChild(tagBadge);
-        screen.appendChild(embedContainer);
+        screen.appendChild(liveBadge);
+        screen.appendChild(captionBar);
 
-        // Click to focus and calibrate
         screen.addEventListener('click', (e) => {
-            if (!e.target.closest('a') && !e.target.closest('button')) {
-                focusOnScreen(index);
-            }
+            e.stopPropagation();
+            focusOnScreen(index);
         });
 
         screenData.domEl = screen;
         screensCluster.appendChild(screen);
-
-        // Mount Official Twitter Widget Embed
-        mountTwitterWidget(item.id, embedContainer);
     });
 
     applyLayout(currentLayout);
-}
-
-function mountTwitterWidget(tweetId, containerEl) {
-    if (typeof twttr !== 'undefined' && twttr.widgets) {
-        twttr.widgets.createTweet(
-            tweetId,
-            containerEl,
-            {
-                theme: 'dark',
-                conversation: 'none',
-                dnt: true,
-                align: 'center',
-                width: 360
-            }
-        ).then(el => {
-            if (!el) {
-                // Fallback block if tweet is deleted or blocked
-                containerEl.innerHTML = `
-                    <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">
-                        <div style="font-size:24px; margin-bottom:8px;">🛰️</div>
-                        <div style="color:var(--neon-cyan); font-weight:700; margin-bottom:4px;">LIVE TWITTER FEED ONLINE</div>
-                        <div>Tweet ID: ${tweetId}</div>
-                    </div>
-                `;
-            }
-        }).catch(err => {
-            console.warn('[TWITTER] Widget error for', tweetId, err);
-        });
-    } else {
-        // If Twitter widget script is loading, retry in 300ms
-        setTimeout(() => mountTwitterWidget(tweetId, containerEl), 300);
-    }
 }
 
 function applyLayout(layout) {
@@ -205,11 +213,11 @@ function applyLayout(layout) {
             const col = index % cols;
             const row = Math.floor(index / cols);
 
-            const angles = [-28, 0, 28];
+            const angles = [-26, 0, 26];
             const angle = (angles[col] || 0) + c.rotY;
-            const yOffset = (row === 0 ? -160 : 180) + c.y;
-            const zDist = (col === 1 ? -520 : -570) + c.z;
-            const xOffset = (col - 1) * 440 + c.x;
+            const yOffset = (row === 0 ? -120 : 130) + c.y;
+            const zDist = (col === 1 ? -480 : -520) + c.z;
+            const xOffset = (col - 1) * 410 + c.x;
 
             baseTransform = `translate3d(${xOffset}px, ${yOffset}px, ${zDist}px) rotateY(${-angle}deg) scale(${c.scale})`;
 
@@ -218,15 +226,15 @@ function applyLayout(layout) {
             const col = index % cols;
             const row = Math.floor(index / cols);
 
-            const xOffset = (col - 1) * 440 + c.x;
-            const yOffset = (row === 0 ? -160 : 180) + c.y;
-            const zDist = -500 + c.z;
+            const xOffset = (col - 1) * 400 + c.x;
+            const yOffset = (row === 0 ? -120 : 130) + c.y;
+            const zDist = -450 + c.z;
 
             baseTransform = `translate3d(${xOffset}px, ${yOffset}px, ${zDist}px) rotateY(${c.rotY}deg) scale(${c.scale})`;
 
         } else if (layout === 'cylinder_ring') {
             const angle = (index / total) * 360 + c.rotY;
-            baseTransform = `rotateY(${angle}deg) translateZ(${700 + c.z}px) translateY(${c.y}px) scale(${c.scale})`;
+            baseTransform = `rotateY(${angle}deg) translateZ(${620 + c.z}px) translateY(${c.y}px) scale(${c.scale})`;
         }
 
         screenData.domEl.style.transform = baseTransform;
@@ -240,7 +248,7 @@ function addCustomScreen(item) {
         custom: { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
     });
     currentVideos.push(item);
-    renderTwitterScreens();
+    renderLiveVideoScreens();
 }
 
 function removeScreen(index) {
@@ -248,7 +256,7 @@ function removeScreen(index) {
     activeScreensData.splice(index, 1);
     currentVideos.splice(index, 1);
     activeScreensData.forEach((s, idx) => s.index = idx);
-    renderTwitterScreens();
+    renderLiveVideoScreens();
     resetFocus();
 }
 
@@ -284,7 +292,7 @@ function loadSavedLayout() {
                 custom: s.custom || { scale: 1.0, x: 0, y: 0, z: 0, rotY: 0 }
             }));
             currentVideos = activeScreensData.map(s => s.item);
-            renderTwitterScreens();
+            renderLiveVideoScreens();
             showToast('✓ Restored Saved Layout Configuration');
         } catch (e) {
             console.error('Failed to load saved layout:', e);
@@ -310,6 +318,10 @@ function focusOnScreen(index) {
     if (!s) return;
 
     activeScreensData.forEach((sd, idx) => {
+        if (sd.videoEl) {
+            sd.videoEl.muted = (idx !== index);
+            if (idx === index && sd.videoEl.paused) sd.videoEl.play().catch(() => {});
+        }
         if (sd.domEl) sd.domEl.classList.toggle('focused', idx === index);
     });
 
@@ -320,9 +332,9 @@ function focusOnScreen(index) {
     if (cameraMode === 'chair' && viewportEl) {
         const cols = 3;
         const col = index % cols;
-        const angles = [-28, 0, 28];
+        const angles = [-26, 0, 26];
         const rotY = -(angles[col] || 0);
-        viewportEl.style.transform = `rotateX(0deg) rotateY(${rotY}deg) translateZ(120px)`;
+        viewportEl.style.transform = `rotateX(0deg) rotateY(${rotY}deg) translateZ(160px)`;
     }
 }
 
@@ -330,6 +342,7 @@ function resetFocus() {
     focusedScreenIndex = null;
     activeScreensData.forEach(sd => {
         if (sd.domEl) sd.domEl.classList.remove('focused');
+        if (sd.videoEl) sd.videoEl.muted = true;
     });
     if (cameraMode === 'chair' && viewportEl) {
         viewportEl.style.transform = `rotateX(0deg) rotateY(0deg) translateZ(0px)`;
@@ -364,7 +377,7 @@ function triggerGlitch(durationMs = 600) {
         if (s.domEl) {
             const rx = (Math.random() - 0.5) * 40;
             const ry = (Math.random() - 0.5) * 40;
-            s.domEl.style.transform = `scale(1.06) translate(${rx}px, ${ry}px)`;
+            s.domEl.style.transform = `scale(1.08) translate(${rx}px, ${ry}px)`;
         }
     });
     setTimeout(() => {

@@ -1,20 +1,12 @@
 
-// Main Application Controller & HUD Orchestrator (Official Twitter / X Widget Integration)
+// Main Application Controller & HUD Orchestrator (Live Real-Time Streaming Video)
 let currentSelectedScreenIdx = null;
 
-const DEFAULT_TWEET_IDS = [
-    { id: "1798696803276685412", category: "space" }, // SpaceX Starship Flight 4
-    { id: "1758202954848313397", category: "ai" },    // OpenAI Sora
-    { id: "1780612458428387584", category: "ai" },    // Boston Dynamics Atlas
-    { id: "1689255288280735744", category: "cat" },   // Viral Cat Physics
-    { id: "1665406086702678018", category: "dog" },   // Golden Retriever
-    { id: "1511352467389816834", category: "gaming" } // Unreal Engine 5 Nanite
-];
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     setupUI();
     initHoloViewport();
-    updateHoloScreens(DEFAULT_TWEET_IDS);
+    // Initialize with real SpaceX & Space video streams
+    await executeSearch('spacex');
 });
 
 function setupUI() {
@@ -74,11 +66,11 @@ function setupUI() {
             addModal.style.display = 'none';
             if (addInput) addInput.value = '';
             
-            showToast(`Deploying Tweet Screen: ${inputVal}...`);
-            const matched = TwitterEngine.search(inputVal, 1);
+            showToast(`Deploying Screen: "${inputVal}"...`);
+            const matched = await TwitterEngine.search(inputVal, 1);
             if (matched && matched.length > 0) {
                 addCustomScreen(matched[0]);
-                showToast(`✓ Tweet #${activeScreensData.length} Added to 3D Matrix!`);
+                showToast(`✓ Screen #${activeScreensData.length} Added to 3D Matrix!`);
             }
         });
     }
@@ -170,19 +162,21 @@ async function executeSearch(query) {
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) searchBtn.innerText = 'SCANNING...';
     triggerGlitch(500);
-    showToast(`📡 SCANNING TWITTER FOR: "${query.toUpperCase()}"...`);
+    showToast(`📡 SCANNING LIVE REPOSITORIES FOR: "${query.toUpperCase()}"...`);
 
     try {
-        const results = TwitterEngine.search(query, 6);
+        const results = await TwitterEngine.search(query, 6);
         if (results && results.length > 0) {
             updateHoloScreens(results);
-            showToast(`✓ Intercepted ${results.length} Real Video Tweets for "${query.toUpperCase()}"`);
-            setTimeout(() => focusOnScreen(0), 300);
+            const statScreens = document.getElementById('stat-active-screens');
+            if (statScreens) statScreens.innerText = results.length;
+            showToast(`✓ Intercepted ${results.length} Real Videos for "${query.toUpperCase()}"`);
+            setTimeout(() => focusOnScreen(0), 350);
         } else {
-            showToast(`No video tweets found for "${query}"`);
+            showToast(`No live videos found for "${query}"`);
         }
     } catch (e) {
-        showToast('Error querying Twitter streams');
+        showToast('Error querying video streams');
     } finally {
         if (searchBtn) searchBtn.innerText = 'SCAN';
     }
