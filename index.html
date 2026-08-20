@@ -3,180 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Man in the Chair – 3D Holographic Twitter Command Deck</title>
+    <title>Man in the Chair – 3D Holographic YouTube Command Deck</title>
     <link rel="stylesheet" href="./static/style.css">
-    <script src="./static/twitter_engine.js"></script>
 </head>
 <body>
 
-    <!-- 3D CSS Holographic Viewport -->
-    <div id="css3d-viewport">
+    <!-- 3D Holographic Viewport -->
+    <div id="viewport">
         <div class="floor-grid"></div>
         <div id="screens-cluster"></div>
     </div>
 
-    <!-- Top Command HUD -->
+    <!-- Top HUD Bar -->
     <div class="top-hud">
-        <div class="brand-section">
-            <div class="brand-icon">💺</div>
+        <div class="brand">
+            <span class="brand-icon">💺</span>
             <div>
-                <div class="brand-title">Holo-Chair Deck</div>
-                <div class="brand-sub">TWITTER / X VIDEO INTERCEPT MATRIX</div>
+                <div class="brand-name">MAN IN THE CHAIR</div>
+                <div class="brand-sub">3D HOLOGRAPHIC YOUTUBE COMMAND DECK</div>
             </div>
         </div>
 
-        <!-- Quick Intercept Input -->
-        <form class="search-container" id="quick-intercept-form">
-            <span class="search-icon">⚡</span>
-            <input type="text" id="quick-intercept-input" placeholder="Paste Twitter/X Tweet URL or Video Stream URL to project into Hologram..." autocomplete="off" />
-            <button type="submit" class="search-btn" id="quick-intercept-btn">PROJECT</button>
+        <form class="search-bar" id="search-form">
+            <span>🔍</span>
+            <input id="search-input" type="text" placeholder="Search YouTube topic, or paste any YouTube URL..." autocomplete="off" />
+            <button type="submit" id="search-btn">SCAN</button>
         </form>
 
-        <!-- System Controls -->
-        <div class="system-controls">
-            <button class="hud-btn active" id="btn-toggle-browser" title="Toggle Floating Twitter Browser Console">🌐 TWITTER BROWSER</button>
-            <button class="hud-btn" id="btn-add-screen" title="Add More Hologram Screens">➕ ADD SCREEN</button>
-            <button class="hud-btn cam-btn active" data-cam="chair" title="First-Person Chair View">💺 CHAIR</button>
-            <button class="hud-btn cam-btn" data-cam="tactical" title="Tactical Overview">🛰️ TACTICAL</button>
-            <button class="hud-btn cam-btn" data-cam="orbit" title="Cinematic Orbit">🎥 ORBIT</button>
-            <button class="hud-btn" id="btn-reset-cam" title="Reset Camera POV">🎯 RESET CAM</button>
+        <div class="hud-controls">
+            <button class="hud-btn add-btn" id="btn-add">➕ ADD SCREEN</button>
+            <button class="hud-btn" id="btn-mute-all">🔇 MUTE ALL</button>
+            <button class="hud-btn" id="btn-reset-cam">🎯 RESET CAM</button>
+            <button class="hud-btn cam-btn active" data-cam="chair">💺 CHAIR</button>
+            <button class="hud-btn cam-btn" data-cam="tactical">🛰 TACTICAL</button>
+            <button class="hud-btn cam-btn" data-cam="orbit">🎥 ORBIT</button>
         </div>
     </div>
 
-    <!-- Floating Live Twitter Browser Console Deck -->
-    <div class="floating-browser-panel" id="twitter-browser-panel">
-        <div class="browser-header">
-            <div class="browser-tab">
-                <span style="color:var(--neon-cyan);">𝕏</span> Live Twitter / X Cockpit Browser
-            </div>
-            <div class="browser-window-controls">
-                <button class="browser-win-btn" id="btn-browser-minimize">_</button>
-                <button class="browser-win-btn" id="btn-browser-close">✕</button>
-            </div>
+    <!-- Category Pills -->
+    <div class="pills-bar">
+        <button class="pill active" data-cat="space">🚀 Space</button>
+        <button class="pill" data-cat="ai">🤖 AI & Robotics</button>
+        <button class="pill" data-cat="nature">🌿 Nature</button>
+        <button class="pill" data-cat="cats">🐱 Cats</button>
+        <button class="pill" data-cat="cyberpunk">🌆 Cyberpunk</button>
+        <button class="pill" data-cat="f1">🏎️ Formula 1</button>
+        <button class="pill" data-cat="gaming">🎮 Gaming</button>
+        <button class="pill" data-cat="music">🎵 Music</button>
+    </div>
+
+    <!-- Right Panel: Screen Adjuster -->
+    <div class="right-panel" id="adj-panel">
+        <div class="panel-title-row">
+            <span id="adj-screen-label">SCREEN #01</span>
+            <button id="adj-close">✕</button>
         </div>
 
-        <!-- Browser Navigation Bar -->
-        <div class="browser-nav-bar">
-            <button class="nav-btn" id="btn-nav-back" title="Back">◀</button>
-            <button class="nav-btn" id="btn-nav-forward" title="Forward">▶</button>
-            <button class="nav-btn" id="btn-nav-reload" title="Reload">↻</button>
-            <div class="browser-url-bar">
-                <span style="font-size:12px; color:var(--text-muted);">🔒</span>
-                <input type="text" id="browser-url-input" value="https://x.com/search?q=filter%3Avideos&f=live" placeholder="https://x.com/..." />
-                <button class="nav-go-btn" id="btn-nav-go">GO</button>
-            </div>
+        <div class="slider-group">
+            <label>SCALE</label>
+            <input type="range" id="sl-scale" min="0.4" max="2.2" step="0.05" value="1" />
+        </div>
+        <div class="slider-group">
+            <label>OFFSET X</label>
+            <input type="range" id="sl-x" min="-700" max="700" step="10" value="0" />
+        </div>
+        <div class="slider-group">
+            <label>OFFSET Y</label>
+            <input type="range" id="sl-y" min="-400" max="400" step="10" value="0" />
+        </div>
+        <div class="slider-group">
+            <label>DEPTH Z</label>
+            <input type="range" id="sl-z" min="-400" max="400" step="10" value="0" />
+        </div>
+        <div class="slider-group">
+            <label>ANGLE Y</label>
+            <input type="range" id="sl-rot" min="-60" max="60" step="2" value="0" />
         </div>
 
-        <!-- Video Grabber / Interception Action Bar -->
-        <div class="browser-action-bar">
-            <div class="grabber-pill-group">
-                <span style="font-size:10px; color:var(--neon-cyan); font-weight:700;">QUICK TARGETS:</span>
-                <button class="target-pill" data-url="https://x.com/SpaceX">🚀 @SpaceX</button>
-                <button class="target-pill" data-url="https://x.com/OpenAI">🤖 @OpenAI</button>
-                <button class="target-pill" data-url="https://x.com/BostonDynamics">🦾 @BostonDynamics</button>
-                <button class="target-pill" data-url="https://x.com/DailyCatsX">🐱 @DailyCatsX</button>
-                <button class="target-pill" data-url="https://x.com/F1">🏎️ @F1</button>
-                <button class="target-pill" data-url="https://x.com/search?q=starship%20video&f=live">🔍 Starship Live</button>
-            </div>
-            <div class="grabber-trigger-row">
-                <input type="text" id="grab-video-url" placeholder="Paste on-site video link or Tweet URL to project..." />
-                <select id="target-screen-select">
-                    <option value="auto">Target: Next Screen (Auto)</option>
-                    <option value="0">Screen #01</option>
-                    <option value="1">Screen #02</option>
-                    <option value="2">Screen #03</option>
-                    <option value="3">Screen #04</option>
-                    <option value="4">Screen #05</option>
-                    <option value="5">Screen #06</option>
-                    <option value="new">➕ New Screen</option>
-                </select>
-                <button class="grab-project-btn" id="btn-grab-project">⚡ PROJECT TO HOLOGRAM</button>
-            </div>
-        </div>
-
-        <!-- Embedded Interactive Browser Frame -->
-        <div class="browser-viewport-container">
-            <iframe id="twitter-iframe" src="https://platform.twitter.com/widgets/tweet.html" allow="autoplay; fullscreen; encrypted-media"></iframe>
-            <div class="browser-overlay-hint" id="browser-hint">
-                <div style="font-size:16px; font-weight:700; color:var(--neon-cyan); margin-bottom:6px;">📡 TWITTER ON-SITE VIDEO INTERCEPTOR READY</div>
-                <div style="font-size:12px; color:var(--text-muted); max-width:440px; margin-bottom:12px;">
-                    Browse Twitter / X directly above or paste any Tweet / Video URL into the Projector to instantly capture and project its video stream onto your 3D floating hologram deck.
-                </div>
-            </div>
+        <div class="panel-actions">
+            <button class="panel-btn" id="adj-save">💾 SAVE LAYOUT</button>
+            <button class="panel-btn" id="adj-load">↺ LOAD</button>
+            <button class="panel-btn danger" id="adj-remove">🗑 REMOVE</button>
         </div>
     </div>
 
-    <!-- Right Screen Adjuster Telemetry Panel -->
-    <div class="right-focus-panel" id="focus-panel">
-        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="focus-screen-num" style="color:var(--neon-cyan); font-weight:700;">SCREEN #01</span>
-            <button class="focus-close-btn" id="close-focus-btn">✕</button>
+    <!-- Bottom Cockpit Bar -->
+    <div class="bottom-bar">
+        <span class="stat">ACTIVE: <strong id="stat-count">0</strong></span>
+        <div class="layout-btns">
+            <button class="layout-btn active" data-layout="dome">DOME</button>
+            <button class="layout-btn" data-layout="flat">FLAT</button>
+            <button class="layout-btn" data-layout="ring">360°</button>
         </div>
+        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET</button>
+    </div>
 
-        <!-- 3D Screen Spatial Adjuster Controls -->
-        <div class="adjuster-section">
-            <div style="font-size:10px; font-weight:700; color:var(--neon-cyan); text-transform:uppercase;">⚙ SPATIAL CALIBRATION</div>
-
-            <div class="control-slider-group">
-                <span>SCALE:</span>
-                <input type="range" id="slider-scale" min="0.5" max="2.0" step="0.05" value="1.0" />
-            </div>
-            <div class="control-slider-group">
-                <span>OFFSET X:</span>
-                <input type="range" id="slider-pos-x" min="-600" max="600" step="10" value="0" />
-            </div>
-            <div class="control-slider-group">
-                <span>OFFSET Y:</span>
-                <input type="range" id="slider-pos-y" min="-400" max="400" step="10" value="0" />
-            </div>
-            <div class="control-slider-group">
-                <span>DEPTH Z:</span>
-                <input type="range" id="slider-pos-z" min="-400" max="400" step="10" value="0" />
-            </div>
-            <div class="control-slider-group">
-                <span>ANGLE Y:</span>
-                <input type="range" id="slider-rot-y" min="-60" max="60" step="2" value="0" />
-            </div>
-
-            <div class="action-row">
-                <button class="action-btn" id="btn-save-layout" title="Save Custom Spatial Layout">💾 SAVE LAYOUT</button>
-                <button class="action-btn" id="btn-load-layout" title="Load Saved Layout">↺ LOAD</button>
-                <button class="action-btn danger" id="btn-remove-screen" title="Remove This Screen">🗑 REMOVE</button>
+    <!-- Add Screen Modal -->
+    <div class="modal-back" id="add-modal">
+        <div class="modal">
+            <div class="modal-title">➕ ADD YOUTUBE SCREEN</div>
+            <div class="modal-sub">Paste a YouTube URL or enter any search topic</div>
+            <input id="modal-input" type="text" placeholder="e.g. https://youtube.com/watch?v=... or 'Starship launch'" />
+            <div class="modal-btns">
+                <button class="panel-btn confirm" id="modal-confirm">DEPLOY</button>
+                <button class="panel-btn" id="modal-cancel">CANCEL</button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Cockpit Status Deck -->
-    <div class="bottom-cockpit-hud">
-        <div class="cockpit-stat">SCREENS: <span id="stat-active-screens">6</span></div>
-        
-        <div class="layout-picker">
-            <button class="layout-btn active" data-layout="curved_dome">CURVED DOME</button>
-            <button class="layout-btn" data-layout="flat_matrix">FLAT MATRIX</button>
-            <button class="layout-btn" data-layout="cylinder_ring">360° CYLINDER</button>
-        </div>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
-        <button class="hud-btn" id="btn-reset-layout" style="padding:4px 8px; font-size:10px;">↺ RESET LAYOUT</button>
-        <div class="cockpit-stat">STREAM MATRIX: <span style="color:var(--neon-green);">ACTIVE</span></div>
-    </div>
-
-    <!-- Modal for Adding Screen -->
-    <div class="modal-backdrop" id="add-screen-modal">
-        <div class="modal-card">
-            <div style="font-size:14px; font-weight:700; color:var(--neon-cyan); letter-spacing:1px;">➕ DEPLOY NEW TWITTER / X SCREEN</div>
-            <div style="font-size:11px; color:var(--text-muted);">Enter a topic, hashtag, or paste a direct Twitter/X post URL:</div>
-            <input type="text" id="modal-screen-topic" placeholder="e.g. Starship, Sora, F1, https://x.com/user/status/..." />
-            <div style="display:flex; gap:10px;">
-                <button class="action-btn" id="modal-add-btn" style="background:var(--neon-cyan); color:#050811; font-weight:700; flex:2;">DEPLOY SCREEN</button>
-                <button class="action-btn" id="modal-cancel-btn" style="flex:1;">CANCEL</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Banner -->
-    <div class="holo-toast" id="holo-toast">Holographic Array Online</div>
-
-    <script src="./static/holo_viewport.js"></script>
+    <script src="./static/youtube_engine.js"></script>
+    <script src="./static/viewport.js"></script>
     <script src="./static/app.js"></script>
 </body>
 </html>
