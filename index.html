@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Man in the Chair – 3D Holographic YouTube Command Deck</title>
+    <!-- YouTube Official Iframe Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <link rel="stylesheet" href="./static/style.css">
 </head>
 <body>
@@ -20,19 +22,21 @@
             <span class="brand-icon">💺</span>
             <div>
                 <div class="brand-name">MAN IN THE CHAIR</div>
-                <div class="brand-sub">3D HOLOGRAPHIC YOUTUBE COMMAND DECK</div>
+                <div class="brand-sub">3D HOLOGRAPHIC COMMAND DECK</div>
             </div>
         </div>
 
         <form class="search-bar" id="search-form">
-            <span>🔍</span>
-            <input id="search-input" type="text" placeholder="Search YouTube topic, or paste any YouTube URL..." autocomplete="off" />
+            <span class="search-icon">🔍</span>
+            <input id="search-input" type="text" placeholder="Search real YouTube topic (e.g. 'SpaceX', 'Formula 1', 'Synthwave')..." autocomplete="off" />
             <button type="submit" id="search-btn">SCAN</button>
         </form>
 
         <div class="hud-controls">
-            <button class="hud-btn add-btn" id="btn-add">➕ ADD SCREEN</button>
+            <button class="hud-btn" id="btn-playlist">📋 STREAMS</button>
+            <button class="hud-btn" id="btn-mixer">🎛️ VOL MIXER</button>
             <button class="hud-btn" id="btn-mute-all">🔇 MUTE ALL</button>
+            <button class="hud-btn add-btn" id="btn-add">➕ ADD SCREEN</button>
             <button class="hud-btn" id="btn-reset-cam">🎯 RESET CAM</button>
             <button class="hud-btn cam-btn active" data-cam="chair">💺 CHAIR</button>
             <button class="hud-btn cam-btn" data-cam="tactical">🛰 TACTICAL</button>
@@ -40,25 +44,61 @@
         </div>
     </div>
 
-    <!-- Category Pills -->
+    <!-- Category Quick Pills -->
     <div class="pills-bar">
-        <button class="pill active" data-cat="space">🚀 Space</button>
-        <button class="pill" data-cat="ai">🤖 AI & Robotics</button>
-        <button class="pill" data-cat="nature">🌿 Nature</button>
-        <button class="pill" data-cat="cats">🐱 Cats</button>
-        <button class="pill" data-cat="cyberpunk">🌆 Cyberpunk</button>
-        <button class="pill" data-cat="f1">🏎️ Formula 1</button>
-        <button class="pill" data-cat="gaming">🎮 Gaming</button>
-        <button class="pill" data-cat="music">🎵 Music</button>
+        <button class="pill active" data-cat="Space exploration launches">🚀 Space</button>
+        <button class="pill" data-cat="Boston Dynamics robots AI">🤖 AI & Robotics</button>
+        <button class="pill" data-cat="Nature 4k ocean wildlife">🌿 Nature</button>
+        <button class="pill" data-cat="Funny cats viral moments">🐱 Cats</button>
+        <button class="pill" data-cat="Cyberpunk synthwave city 4k">🌆 Cyberpunk</button>
+        <button class="pill" data-cat="Formula 1 onboard race">🏎️ Formula 1</button>
+        <button class="pill" data-cat="Unreal Engine 5 gameplay trailers">🎮 Gaming</button>
+        <button class="pill" data-cat="Popular hit music videos">🎵 Music</button>
     </div>
 
-    <!-- Right Panel: Screen Adjuster -->
-    <div class="right-panel" id="adj-panel">
+    <!-- Left/Side Drawer: Now Playing Streams List -->
+    <div class="side-panel left-drawer" id="playlist-panel">
         <div class="panel-title-row">
-            <span id="adj-screen-label">SCREEN #01</span>
-            <button id="adj-close">✕</button>
+            <span>📋 ACTIVE VIDEO STREAMS</span>
+            <button class="panel-close-btn" id="playlist-close">✕</button>
         </div>
+        <div class="playlist-sub" id="playlist-queue-info">Loading active streams...</div>
+        <div class="playlist-scroll" id="playlist-list">
+            <!-- Dynamically populated by updateUILists() -->
+        </div>
+    </div>
 
+    <!-- Right Drawer: Audio / Volume Mixer Panel -->
+    <div class="side-panel right-drawer" id="mixer-panel">
+        <div class="panel-title-row">
+            <span>🎛️ MULTI-STREAM AUDIO MIXER</span>
+            <button class="panel-close-btn" id="mixer-close">✕</button>
+        </div>
+        <div class="mixer-master-box">
+            <div class="master-row">
+                <span class="master-label">MASTER VOLUME</span>
+                <span id="master-vol-val">100%</span>
+            </div>
+            <input type="range" id="sl-master-vol" min="0" max="100" value="100" />
+            <div class="mixer-toggle-row">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="chk-solo-mode" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Solo mode (unmuting one mutes others)</span>
+            </div>
+        </div>
+        <div class="mixer-strips-scroll" id="mixer-strips">
+            <!-- Dynamically populated channel faders -->
+        </div>
+    </div>
+
+    <!-- Right Panel: Screen Spatial Adjuster -->
+    <div class="side-panel right-drawer" id="adj-panel">
+        <div class="panel-title-row">
+            <span id="adj-screen-label">SCREEN #01 SPATIAL CALIBRATION</span>
+            <button class="panel-close-btn" id="adj-close">✕</button>
+        </div>
         <div class="slider-group">
             <label>SCALE</label>
             <input type="range" id="sl-scale" min="0.4" max="2.2" step="0.05" value="1" />
@@ -79,7 +119,6 @@
             <label>ANGLE Y</label>
             <input type="range" id="sl-rot" min="-60" max="60" step="2" value="0" />
         </div>
-
         <div class="panel-actions">
             <button class="panel-btn" id="adj-save">💾 SAVE LAYOUT</button>
             <button class="panel-btn" id="adj-load">↺ LOAD</button>
@@ -89,29 +128,29 @@
 
     <!-- Bottom Cockpit Bar -->
     <div class="bottom-bar">
-        <span class="stat">ACTIVE: <strong id="stat-count">0</strong></span>
+        <span class="stat">ACTIVE SCREENS: <strong id="stat-count">0</strong></span>
         <div class="layout-btns">
             <button class="layout-btn active" data-layout="dome">DOME</button>
             <button class="layout-btn" data-layout="flat">FLAT</button>
             <button class="layout-btn" data-layout="ring">360°</button>
         </div>
-        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET</button>
+        <button class="hud-btn sm" id="btn-reset-layout">↺ RESET LAYOUT</button>
     </div>
 
     <!-- Add Screen Modal -->
     <div class="modal-back" id="add-modal">
         <div class="modal">
             <div class="modal-title">➕ ADD YOUTUBE SCREEN</div>
-            <div class="modal-sub">Paste a YouTube URL or enter any search topic</div>
-            <input id="modal-input" type="text" placeholder="e.g. https://youtube.com/watch?v=... or 'Starship launch'" />
+            <div class="modal-sub">Paste any YouTube URL, video ID, or search topic</div>
+            <input id="modal-input" type="text" placeholder="e.g. https://youtube.com/watch?v=... or 'Cyberpunk 4K'" />
             <div class="modal-btns">
-                <button class="panel-btn confirm" id="modal-confirm">DEPLOY</button>
+                <button class="panel-btn confirm" id="modal-confirm">DEPLOY TO MATRIX</button>
                 <button class="panel-btn" id="modal-cancel">CANCEL</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
     <script src="./static/youtube_engine.js"></script>
