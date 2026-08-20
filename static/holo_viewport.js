@@ -1,17 +1,15 @@
 
 // Universal Dual-Engine 3D Holographic Viewport (GPU Three.js WebGL + CPU CSS 3D)
-let renderMode = localStorage.getItem('holo_render_mode') || 'cpu'; // 'cpu' | 'gpu'
+let renderMode = localStorage.getItem('holo_render_mode') || 'cpu';
 
-// Global Scene State
 let currentVideos = [];
-let activeScreensData = []; // [{ item, video, customTransform: { scale, x, y, z, rotY } }]
+let activeScreensData = [];
 let focusedScreenIndex = null;
-let cameraMode = 'chair'; // 'chair' | 'tactical' | 'orbit' | 'free'
+let cameraMode = 'chair';
 let currentLayout = 'curved_dome';
 let holoColorHex = 0x00f0ff;
 let holoColorCss = '#00f0ff';
 
-// CSS 3D Elements & Controls
 let viewportEl = null;
 let screensCluster = null;
 let isDragging = false;
@@ -20,8 +18,7 @@ let camRotX = 0, camRotY = 0, camPosZ = 0;
 let targetRotX = 0, targetRotY = 0;
 let orbitAngle = 0;
 
-// Three.js State (for GPU mode)
-let threeScene, threeCamera, threeRenderer, threeOrbitControls, threeScreensGroup, threeParticles;
+let threeScene, threeCamera, threeRenderer, threeScreensGroup, threeParticles;
 let clock = new THREE.Clock();
 
 function initHoloViewport() {
@@ -30,21 +27,30 @@ function initHoloViewport() {
     viewportEl = document.getElementById('css3d-viewport');
     screensCluster = document.getElementById('screens-cluster');
 
-    // Setup CSS 3D Pointer & Keyboard Camera Controls
     setupCameraControls();
 
-    // Initialize GPU Engine if Three.js is present and mode is GPU
     if (typeof THREE !== 'undefined') {
         try {
             initThreeJsGpu();
         } catch (e) {
-            console.warn('[VIEWPORT] WebGL GPU initialization fallback to CPU:', e);
+            console.warn('[VIEWPORT] WebGL GPU fallback to CPU:', e);
             renderMode = 'cpu';
         }
     }
 
     setRenderMode(renderMode);
     requestAnimationFrame(renderLoop);
+
+    // Global click listener to unlock audio & video playback
+    document.addEventListener('click', unlockMediaPlayback, { once: true });
+}
+
+function unlockMediaPlayback() {
+    activeScreensData.forEach(sd => {
+        if (sd.videoEl && sd.videoEl.paused) {
+            sd.videoEl.play().catch(() => {});
+        }
+    });
 }
 
 function setRenderMode(mode) {
@@ -65,16 +71,12 @@ function setRenderMode(mode) {
         if (toggleBtn) toggleBtn.innerHTML = '💻 CPU (CSS 3D)';
     }
 
-    // Re-render screens in active mode
     if (activeScreensData.length > 0) {
         const items = activeScreensData.map(s => s.item);
         updateHoloScreens(items);
     }
 }
 
-// -------------------------------------------------------------
-// Interactive Camera Navigation & Keyboard Controls
-// -------------------------------------------------------------
 function setupCameraControls() {
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('.top-hud') || e.target.closest('.left-feed-panel') || 
@@ -98,7 +100,6 @@ function setupCameraControls() {
             targetRotX -= dy * 0.25;
             targetRotX = Math.max(-60, Math.min(60, targetRotX));
         } else if (cameraMode === 'chair' && focusedScreenIndex === null) {
-            // Subtle ambient mouse look
             const normX = (e.clientX / window.innerWidth - 0.5) * 2;
             const normY = (e.clientY / window.innerHeight - 0.5) * 2;
             targetRotY = normX * 12;
@@ -110,14 +111,12 @@ function setupCameraControls() {
         isDragging = false;
     });
 
-    // Zoom on Wheel
     window.addEventListener('wheel', (e) => {
         if (e.target.closest('.left-feed-panel') || e.target.closest('.right-focus-panel')) return;
         camPosZ -= e.deltaY * 0.5;
         camPosZ = Math.max(-400, Math.min(300, camPosZ));
     }, { passive: true });
 
-    // Keyboard Shortcuts (WASD / Arrows to Pan, Space to Reset)
     window.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT') return;
         if (e.key === 'ArrowLeft' || e.key === 'a') targetRotY -= 6;
@@ -140,7 +139,6 @@ function resetCamera() {
     if (threeCamera) threeCamera.position.set(0, 1.25, 0.3);
 }
 
-// Main Render Loop
 function renderLoop() {
     requestAnimationFrame(renderLoop);
 
@@ -170,9 +168,6 @@ function renderLoop() {
     }
 }
 
-// -------------------------------------------------------------
-// Screen Data & Layout Hydration
-// -------------------------------------------------------------
 function updateHoloScreens(videoItems) {
     if (!videoItems || videoItems.length === 0) return;
 
@@ -201,15 +196,33 @@ function renderCss3dScreens() {
         screen.className = 'holo-screen-3d';
         screen.dataset.index = index;
 
+        // Guaranteed Video Playback Attributes (without crossOrigin block)
         const video = document.createElement('video');
         video.className = 'screen-video-el';
-        video.src = item.video_url;
-        video.crossOrigin = 'anonymous';
-        video.loop = true;
         video.muted = true;
+        video.defaultMuted = true;
         video.autoplay = true;
+        video.loop = true;
         video.playsInline = true;
-        video.play().catch(e => console.log('Autoplay:', e));
+        video.setAttribute('muted', '');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('loop', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', 'auto');
+        video.src = item.video_url;
+
+        // Error fallback
+        video.onerror = () => {
+            console.warn('[VIEWPORT] Stream fallback for index', index);
+            if (typeof TwitterEngine !== 'undefined') {
+                video.src = TwitterEngine.LOCAL_VIDEO_POOL[index % TwitterEngine.LOCAL_VIDEO_POOL.length];
+                video.play().catch(() => {});
+            }
+        };
+
+        video.play().catch(e => {
+            console.log('Video autoplay waiting for gesture:', e);
+        });
 
         screenData.videoEl = video;
 
@@ -288,9 +301,6 @@ function applyLayout(layout) {
     });
 }
 
-// -------------------------------------------------------------
-// Screen Adjustments & Persistence (Add, Remove, Move, Save)
-// -------------------------------------------------------------
 function addCustomScreen(item) {
     activeScreensData.push({
         item: item,
@@ -305,7 +315,6 @@ function removeScreen(index) {
     if (activeScreensData.length <= 1) return;
     activeScreensData.splice(index, 1);
     currentVideos.splice(index, 1);
-    // reindex
     activeScreensData.forEach((s, idx) => s.index = idx);
     renderCss3dScreens();
     resetFocus();
@@ -363,16 +372,16 @@ function resetLayout() {
     showToast('Layout Reset to Curved Dome Default');
 }
 
-// -------------------------------------------------------------
-// Interactive Focus & Audio Solo
-// -------------------------------------------------------------
 function focusOnScreen(index) {
     focusedScreenIndex = index;
     const s = activeScreensData[index];
     if (!s) return;
 
     activeScreensData.forEach((sd, idx) => {
-        if (sd.videoEl) sd.videoEl.muted = (idx !== index);
+        if (sd.videoEl) {
+            sd.videoEl.muted = (idx !== index);
+            if (idx === index && sd.videoEl.paused) sd.videoEl.play().catch(() => {});
+        }
         if (sd.domEl) sd.domEl.classList.toggle('focused', idx === index);
     });
 
@@ -445,9 +454,6 @@ function triggerGlitch(durationMs = 600) {
     }, durationMs);
 }
 
-// -------------------------------------------------------------
-// Optional Three.js WebGL GPU Renderer
-// -------------------------------------------------------------
 function initThreeJsGpu() {
     const canvas = document.getElementById('webgl-canvas');
     if (!canvas) return;
@@ -480,12 +486,11 @@ function renderGpuScreens() {
         const item = screenData.item;
         const video = document.createElement('video');
         video.src = item.video_url;
-        video.crossOrigin = 'anonymous';
         video.loop = true;
         video.muted = true;
         video.autoplay = true;
         video.playsInline = true;
-        video.play().catch(e => console.log('GPU Autoplay:', e));
+        video.play().catch(() => {});
 
         const tex = new THREE.VideoTexture(video);
         const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
