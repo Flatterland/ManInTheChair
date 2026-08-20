@@ -1,18 +1,24 @@
 // ─── App HUD Coordinator & Event Controller ────────────────────────────────
 let selectedIdx = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   initViewport();
 
-  // Load initial space exploration streams dynamically
-  doSearch('Space exploration launches');
+  // 1. Instantly load verified screens (0ms lag, no blank screen)
+  const initialVids = YT.getImmediateResults('space', 6);
+  loadScreens(initialVids);
+
+  // 2. Search live APIs in background
+  YT.searchLiveAsync('Space exploration launches', liveVids => {
+    loadScreens(liveVids);
+  });
 
   // ── Search Form ──────────────────────────────────────────────────────────
-  document.getElementById('search-form').addEventListener('submit', async e => {
+  document.getElementById('search-form').addEventListener('submit', e => {
     e.preventDefault();
     const q = document.getElementById('search-input').value.trim();
     if (!q) return;
-    doSearch(q);
+    executeSearch(q);
   });
 
   // ── Category Pills ───────────────────────────────────────────────────────
@@ -20,7 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     p.addEventListener('click', () => {
       document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
       p.classList.add('active');
-      doSearch(p.dataset.cat);
+      const cat = p.dataset.cat;
+      executeSearch(cat);
     });
   });
 
@@ -105,16 +112,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('modal-cancel').addEventListener('click', () => {
     document.getElementById('add-modal').style.display = 'none';
   });
-  document.getElementById('modal-confirm').addEventListener('click', async () => {
+  document.getElementById('modal-confirm').addEventListener('click', () => {
     const val = document.getElementById('modal-input').value.trim();
     document.getElementById('add-modal').style.display = 'none';
     document.getElementById('modal-input').value = '';
     if (!val) return;
-    toast(`📡 Searching for "${val}"...`);
-    const results = await YT.search(val, 1);
-    if (results.length) {
-      addScreen(results[0]);
-      toast(`➕ Screen #${screens.length} added: ${results[0].title.slice(0, 20)}...`);
+    const vids = YT.getImmediateResults(val, 1);
+    if (vids.length) {
+      addScreen(vids[0]);
+      toast(`➕ Screen #${screens.length} added: ${vids[0].title.slice(0, 20)}...`);
     }
   });
   document.getElementById('modal-input').addEventListener('keydown', e => {
@@ -164,17 +170,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ── Search Helper ────────────────────────────────────────────────────────────
-async function doSearch(query) {
-  glitch(350);
-  toast(`📡 SCANNING YOUTUBE FOR "${query.toUpperCase()}"...`);
-  const results = await YT.search(query, 6);
-  if (results && results.length > 0) {
-    loadScreens(results);
-    setTimeout(() => {
+function executeSearch(query) {
+  glitch(300);
+  toast(`📡 SCANNING FOR "${query.toUpperCase()}"...`);
+
+  // Instant response with matching/thematic results
+  const immediate = YT.getImmediateResults(query, 6);
+  loadScreens(immediate);
+
+  // Background search to enrich queue with more live items
+  YT.searchLiveAsync(query, liveVids => {
+    if (liveVids && liveVids.length > 0) {
+      loadScreens(liveVids);
       const stats = YT.getQueueStats();
-      toast(`✓ ${results.length} live streams projected (${stats.remaining} queued)`);
-    }, 600);
-  }
+      toast(`✓ ${liveVids.length} live streams projected (${stats.remaining} queued)`);
+    }
+  });
 }
 
 // ── Toast Notification Helper ────────────────────────────────────────────────

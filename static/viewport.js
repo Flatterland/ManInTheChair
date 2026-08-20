@@ -1,5 +1,5 @@
-// ─── 3D Viewport, YouTube Player & Audio Matrix Engine ───────────────────────
-let screens = [];            // [{ vid:{id,title,ch,thumb}, custom:{scale,x,y,z,rot}, player, isMuted, volume, errorCount }]
+// ─── 3D Viewport, YouTube Embed & Audio Matrix Engine ───────────────────────
+let screens = [];            // [{ vid:{id,title,ch}, custom:{scale,x,y,z,rot}, isMuted, volume }]
 let focusedIdx = null;
 let cameraMode = 'chair';
 let layout = 'dome';
@@ -10,25 +10,12 @@ let masterMuted = false;
 let dragging = false, mx = 0, my = 0;
 let rotX = 0, rotY = 0, tRotX = 0, tRotY = 0, camZ = 0;
 let orbitAngle = 0;
-let ytApiReady = false;
-
-// YouTube Iframe API callback
-window.onYouTubeIframeAPIReady = function() {
-  ytApiReady = true;
-  console.log('[MitC] YouTube IFrame API ready.');
-  // Initialize any pending screens
-  screens.forEach((s, idx) => {
-    if (!s.player && s.vid && s.vid.id) {
-      initPlayerForScreen(idx);
-    }
-  });
-};
 
 function initViewport() {
   const vp = document.getElementById('viewport');
 
   window.addEventListener('mousedown', e => {
-    if (e.target.closest('.top-hud,.pills-bar,.right-panel,.bottom-bar,.modal-back,#playlist-panel,#mixer-panel')) return;
+    if (e.target.closest('.top-hud,.pills-bar,.side-panel,.bottom-bar,.modal-back')) return;
     dragging = true; mx = e.clientX; my = e.clientY;
   });
   window.addEventListener('mousemove', e => {
@@ -44,7 +31,7 @@ function initViewport() {
   });
   window.addEventListener('mouseup', () => { dragging = false; });
   window.addEventListener('wheel', e => {
-    if (e.target.closest('.right-panel,#playlist-panel,#mixer-panel')) return;
+    if (e.target.closest('.side-panel')) return;
     camZ = Math.max(-480, Math.min(350, camZ - e.deltaY * 0.5));
   }, { passive: true });
   window.addEventListener('keydown', e => {
@@ -77,20 +64,11 @@ function loop() {
 
 // ── load a set of videos onto the 3D grid ─────────────────────────────────
 function loadScreens(vids) {
-  // Destroy old players
-  screens.forEach(s => {
-    if (s.player && typeof s.player.destroy === 'function') {
-      try { s.player.destroy(); } catch (e) {}
-    }
-  });
-
   screens = vids.map((v, i) => ({
     vid: v,
     custom: { scale: 1, x: 0, y: 0, z: 0, rot: 0 },
-    player: null,
     isMuted: true,
-    volume: 100,
-    errorCount: 0
+    volume: 100
   }));
 
   rebuildDOM();
@@ -144,14 +122,15 @@ function rebuildDOM() {
     titleBar.className = 'screen-title-bar';
     titleBar.textContent = s.vid.title || 'Live YouTube Feed';
 
-    // Player wrapper container
-    const playerContainer = document.createElement('div');
-    playerContainer.className = 'player-embed-box';
-    const iframeId = `yt-iframe-slot-${i}-${Date.now()}`;
-    playerContainer.id = iframeId;
+    // Direct embed iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = YT.embedUrl(s.vid.id, s.isMuted);
+    iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+    iframe.allowFullscreen = true;
+    iframe.title = s.vid.title || '';
 
     tile.appendChild(topBar);
-    tile.appendChild(playerContainer);
+    tile.appendChild(iframe);
     tile.appendChild(titleBar);
 
     // Click handler: focus screen AND click-to-unmute
@@ -164,82 +143,17 @@ function rebuildDOM() {
     });
 
     s.el = tile;
-    s.slotId = iframeId;
+    s.iframe = iframe;
     cluster.appendChild(tile);
-
-    // Initialize YouTube player instance
-    initPlayerForScreen(i);
   });
 
   applyLayout();
   updateUILists();
 }
 
-// ── Initialize YouTube Player instance via YT.Player ───────────────────────
-function initPlayerForScreen(idx) {
-  const s = screens[idx];
-  if (!s || !s.vid || !s.vid.id) return;
-  const slotId = s.slotId;
-  if (!document.getElementById(slotId)) return;
-
-  if (window.YT && window.YT.Player) {
-    try {
-      s.player = new YT.Player(slotId, {
-        videoId: s.vid.id,
-        playerVars: {
-          autoplay: 1,
-          mute: s.isMuted ? 1 : 0,
-          loop: 1,
-          playlist: s.vid.id,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          origin: window.location.origin
-        },
-        events: {
-          onReady: (event) => {
-            if (s.isMuted) {
-              event.target.mute();
-            } else {
-              event.target.unMute();
-              event.target.setVolume(Math.round((s.volume * masterVolume) / 100));
-            }
-            event.target.playVideo();
-          },
-          onError: (event) => {
-            // Error codes: 2 (invalid id), 5 (HTML5 error), 100 (not found/deleted), 101/150 (embedding disabled by owner)
-            console.warn(`[MitC] Screen #${idx+1} player error ${event.data} on video ${s.vid.id} (${s.vid.title})`);
-            silentlyCycleScreen(idx);
-          }
-        }
-      });
-    } catch (e) {
-      console.error('[MitC] Failed to create YT.Player instance:', e);
-      fallbackIframe(idx);
-    }
-  } else {
-    // If YT API script is still loading, use direct iframe
-    fallbackIframe(idx);
-  }
-}
-
-// Fallback iframe embedding if YT JS API not loaded
-function fallbackIframe(idx) {
-  const s = screens[idx];
-  if (!s || !s.el) return;
-  const box = s.el.querySelector('.player-embed-box');
-  if (!box) return;
-  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${s.vid.id}?autoplay=1&mute=${s.isMuted?1:0}&loop=1&playlist=${s.vid.id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
-}
-
 // ── Silent Video Replacement (Pulls next video from deep search list) ───────
 function silentlyCycleScreen(idx) {
   if (!screens[idx]) return;
-  screens[idx].errorCount = (screens[idx].errorCount || 0) + 1;
-
-  // Collect all currently playing video IDs so we don't pick duplicates
   const currentIds = screens.map(s => s.vid.id);
   const nextVid = YT.getNextResult(currentIds);
 
@@ -259,42 +173,38 @@ function cycleScreen(idx) {
 // Replace video on an existing screen
 function replaceScreenVideo(idx, newVid) {
   const s = screens[idx];
-  if (!s) return;
+  if (!s || !s.el) return;
   s.vid = newVid;
 
-  // Update badge and title DOM
-  if (s.el) {
-    const badge = s.el.querySelector('.screen-badge');
-    if (badge) badge.textContent = `#${String(idx+1).padStart(2,'0')} · ${(newVid.ch || 'YouTube').slice(0, 16)}`;
-    const titleBar = s.el.querySelector('.screen-title-bar');
-    if (titleBar) titleBar.textContent = newVid.title || 'YouTube Feed';
-  }
+  const badge = s.el.querySelector('.screen-badge');
+  if (badge) badge.textContent = `#${String(idx+1).padStart(2,'0')} · ${(newVid.ch || 'YouTube').slice(0, 16)}`;
+  const titleBar = s.el.querySelector('.screen-title-bar');
+  if (titleBar) titleBar.textContent = newVid.title || 'YouTube Feed';
 
-  // Load in player if instance exists
-  if (s.player && typeof s.player.loadVideoById === 'function') {
-    try {
-      s.player.loadVideoById({
-        videoId: newVid.id,
-        suggestedQuality: 'hd720'
-      });
-      if (s.isMuted) s.player.mute(); else s.player.unMute();
-      s.player.playVideo();
-    } catch (e) {
-      initPlayerForScreen(idx);
-    }
-  } else {
-    // Re-init player
-    const box = s.el.querySelector('.player-embed-box');
-    if (box) {
-      const newSlotId = `yt-iframe-slot-${idx}-${Date.now()}`;
-      box.id = newSlotId;
-      s.slotId = newSlotId;
-      initPlayerForScreen(idx);
-    }
+  const iframe = s.el.querySelector('iframe');
+  if (iframe) {
+    iframe.src = YT.embedUrl(newVid.id, s.isMuted);
   }
 
   updateUILists();
 }
+
+// ── YouTube postMessage Error Interceptor (Auto-cycles on error) ────────────
+window.addEventListener('message', e => {
+  if (!e.data || typeof e.data !== 'string') return;
+  let data;
+  try { data = JSON.parse(e.data); } catch { return; }
+  if (data.event === 'onError' || (data.info && typeof data.info === 'number' && [2, 5, 100, 101, 150].includes(data.info))) {
+    // Find which screen sent the error
+    screens.forEach((s, idx) => {
+      const iframe = s.el && s.el.querySelector('iframe');
+      if (iframe && iframe.contentWindow === e.source) {
+        console.warn(`[MitC] Intercepted video error on Screen #${idx+1} — silently cycling`);
+        silentlyCycleScreen(idx);
+      }
+    });
+  }
+});
 
 // ── Audio & Volume Mixer Controls ───────────────────────────────────────────
 function unmuteScreen(idx) {
@@ -309,15 +219,9 @@ function unmuteScreen(idx) {
   }
 
   s.isMuted = false;
-  if (s.player && typeof s.player.unMute === 'function') {
-    try {
-      s.player.unMute();
-      s.player.setVolume(Math.round((s.volume * masterVolume) / 100));
-    } catch (e) {}
-  } else if (s.el) {
-    postMessageToIframe(s.el, { event: 'command', func: 'unMute', args: [] });
-    postMessageToIframe(s.el, { event: 'command', func: 'setVolume', args: [Math.round((s.volume * masterVolume) / 100)] });
-  }
+  const effective = Math.round((s.volume * masterVolume) / 100);
+  postMessageToScreen(idx, { event: 'command', func: 'unMute', args: [] });
+  postMessageToScreen(idx, { event: 'command', func: 'setVolume', args: [effective] });
 
   updateScreenAudioUI(idx);
   updateUILists();
@@ -328,11 +232,7 @@ function muteScreen(idx) {
   const s = screens[idx];
   if (!s) return;
   s.isMuted = true;
-  if (s.player && typeof s.player.mute === 'function') {
-    try { s.player.mute(); } catch (e) {}
-  } else if (s.el) {
-    postMessageToIframe(s.el, { event: 'command', func: 'mute', args: [] });
-  }
+  postMessageToScreen(idx, { event: 'command', func: 'mute', args: [] });
   updateScreenAudioUI(idx);
   updateUILists();
 }
@@ -350,11 +250,7 @@ function setScreenVolume(idx, vol) {
   s.volume = Math.max(0, Math.min(100, parseInt(vol, 10)));
   const effective = Math.round((s.volume * masterVolume) / 100);
   if (!s.isMuted) {
-    if (s.player && typeof s.player.setVolume === 'function') {
-      try { s.player.setVolume(effective); } catch (e) {}
-    } else if (s.el) {
-      postMessageToIframe(s.el, { event: 'command', func: 'setVolume', args: [effective] });
-    }
+    postMessageToScreen(idx, { event: 'command', func: 'setVolume', args: [effective] });
   }
   updateUILists();
 }
@@ -364,11 +260,7 @@ function setMasterVolume(vol) {
   screens.forEach((s, i) => {
     if (!s.isMuted) {
       const effective = Math.round((s.volume * masterVolume) / 100);
-      if (s.player && typeof s.player.setVolume === 'function') {
-        try { s.player.setVolume(effective); } catch (e) {}
-      } else if (s.el) {
-        postMessageToIframe(s.el, { event: 'command', func: 'setVolume', args: [effective] });
-      }
+      postMessageToScreen(i, { event: 'command', func: 'setVolume', args: [effective] });
     }
   });
   updateUILists();
@@ -397,17 +289,15 @@ function updateScreenAudioUI(idx) {
   const audioBtn = s.el.querySelector('.screen-audio-btn');
   if (audioBtn) {
     audioBtn.className = `screen-audio-btn ${s.isMuted ? 'muted' : 'unmuted'}`;
-    audioPillText(audioBtn, s.isMuted);
+    audioBtn.innerHTML = s.isMuted ? '🔇' : '🔊';
+    audioBtn.title = s.isMuted ? 'Click to Unmute' : 'Muted';
   }
 }
 
-function audioPillText(btn, isMuted) {
-  btn.innerHTML = isMuted ? '🔇' : '🔊';
-  btn.title = isMuted ? 'Click to Unmute' : 'Muted';
-}
-
-function postMessageToIframe(tileEl, data) {
-  const iframe = tileEl.querySelector('iframe');
+function postMessageToScreen(idx, data) {
+  const s = screens[idx];
+  if (!s || !s.el) return;
+  const iframe = s.el.querySelector('iframe');
   if (iframe && iframe.contentWindow) {
     try {
       iframe.contentWindow.postMessage(JSON.stringify(data), '*');
@@ -452,7 +342,6 @@ function focusScreen(idx) {
   focusedIdx = idx;
   screens.forEach((s, i) => s.el && s.el.classList.toggle('focused', i === idx));
 
-  // Lean camera toward focused tile
   const vp = document.getElementById('viewport');
   if (vp && cameraMode === 'chair') {
     const col = idx % 3;
@@ -476,7 +365,7 @@ function unfocus() {
 window.addEventListener('click', e => {
   if (focusedIdx !== null &&
       !e.target.closest('.holo-screen') &&
-      !e.target.closest('.right-panel,#playlist-panel,#mixer-panel,.top-hud,.pills-bar,.bottom-bar')) {
+      !e.target.closest('.side-panel,.top-hud,.pills-bar,.bottom-bar')) {
     unfocus();
   }
 });
@@ -509,18 +398,13 @@ function addScreen(vid) {
   screens.push({
     vid,
     custom: { scale: 1, x: 0, y: 0, z: 0, rot: 0 },
-    player: null,
     isMuted: true,
-    volume: 100,
-    errorCount: 0
+    volume: 100
   });
   rebuildDOM();
 }
 
 function removeScreen(idx) {
-  if (screens[idx] && screens[idx].player && typeof screens[idx].player.destroy === 'function') {
-    try { screens[idx].player.destroy(); } catch (e) {}
-  }
   screens.splice(idx, 1);
   unfocus();
   rebuildDOM();
@@ -550,10 +434,8 @@ function loadLayout() {
     screens = data.screens.map(s => ({
       vid: s.vid,
       custom: s.custom,
-      player: null,
       isMuted: true,
-      volume: s.volume || 100,
-      errorCount: 0
+      volume: s.volume || 100
     }));
     rebuildDOM();
     return true;
@@ -562,11 +444,9 @@ function loadLayout() {
 
 // ── UI Synchronization (Playlist list & Volume Mixer sync) ──────────────────
 function updateUILists() {
-  // 1. Update bottom counter
   const statEl = document.getElementById('stat-count');
   if (statEl) statEl.textContent = screens.length;
 
-  // 2. Render Playlist Panel list
   const playlistContainer = document.getElementById('playlist-list');
   if (playlistContainer) {
     playlistContainer.innerHTML = '';
@@ -617,11 +497,10 @@ function updateUILists() {
     const queueStats = YT.getQueueStats();
     const queueInfo = document.getElementById('playlist-queue-info');
     if (queueInfo) {
-      queueInfo.textContent = `Queue: ${queueStats.remaining} more live results buffered for "${YT.currentQuery || 'live topics'}"`;
+      queueInfo.textContent = `Queue: ${queueStats.remaining} more live results buffered for "${YT.currentQuery || 'topic'}"`;
     }
   }
 
-  // 3. Render Volume Mixer strips
   const mixerStrips = document.getElementById('mixer-strips');
   if (mixerStrips) {
     mixerStrips.innerHTML = '';
@@ -668,7 +547,6 @@ function updateUILists() {
     });
   }
 
-  // Update Master Mute button icon
   const muteAllBtn = document.getElementById('btn-mute-all');
   if (muteAllBtn) {
     const anyUnmuted = screens.some(s => !s.isMuted);
