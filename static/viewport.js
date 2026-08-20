@@ -277,7 +277,7 @@ function applyLayout() {
   else cols = 5;
 
   const rows = Math.ceil(n / cols);
-  const scaleMod = n > 12 ? 0.76 : (n > 9 ? 0.84 : 1.0);
+  const scaleMod = n > 16 ? 0.72 : (n > 12 ? 0.80 : (n > 9 ? 0.84 : 1.0));
 
   screens.forEach((s, i) => {
     if (!s.el) return;
@@ -382,7 +382,7 @@ function updateSpatialAudioAndDoF() {
     }
 
     // 2. Depth of Field Blur
-    if (visualFX.dofEnabled && s.el) {
+    if (visualFX.dofEnabled && s.el && !isCinematicRunning) {
       const isFocusedTile = idx === focusedIdx;
       if (isFocusedTile) {
         s.el.style.filter = 'none';
@@ -898,56 +898,56 @@ async function launchCinematic(optionType, topic) {
   loadScreens(vids);
   muteAllScreensQuiet();
 
-  // ── 25 Bespoke Constellation Coordinates with Deep Background Depths (Z from 0 to -650) ──
+  // ── 25 Bespoke Constellation Coordinates with Deep Background Depths (Z from 0 to -380) ──
   const baseConstellation = [
-    // 1. Hero (0s): Dead center foreground
-    { bx: 0,    by: 0,    bz: 0,    time: 0,    vol: 100 },
-    // 2-5. Inner Ring (Foreground/Mid plane: Z ~ 0 to -50)
-    { bx: -390, by: -170, bz: -30,  time: 4.5,  vol: 55 },
-    { bx: 390,  by: 170,  bz: -40,  time: 6.5,  vol: 50 },
-    { bx: 380,  by: -180, bz: -30,  time: 8.5,  vol: 48 },
-    { bx: -400, by: 180,  bz: -50,  time: 10.5, vol: 45 },
-    // 6-9. Mid Ring (Z ~ -120 to -220)
-    { bx: -690, by: -40,  bz: -140, time: 12.5, vol: 42 },
-    { bx: 700,  by: 50,   bz: -150, time: 14.5, vol: 40 },
-    { bx: -70,  by: -320, bz: -180, time: 16.5, vol: 38 },
-    { bx: 80,   by: 330,  bz: -190, time: 18.5, vol: 38 },
-    // 10-13. Mid Corners (Z ~ -240 to -320)
-    { bx: -590, by: -330, bz: -260, time: 20.5, vol: 35 },
-    { bx: 580,  by: -320, bz: -270, time: 22.5, vol: 35 },
-    { bx: -570, by: 330,  bz: -280, time: 24.5, vol: 32 },
-    { bx: 610,  by: 340,  bz: -290, time: 26.5, vol: 32 },
-    // 14-17. Distant Wings & Outer Crown (Deep Background: Z ~ -380 to -480)
-    { bx: -990, by: -110, bz: -420, time: 28.5, vol: 30 },
-    { bx: 980,  by: 120,  bz: -430, time: 30.5, vol: 30 },
-    { bx: -350, by: -520, bz: -460, time: 32.5, vol: 28 },
-    { bx: 360,  by: -510, bz: -470, time: 34.5, vol: 28 },
-    // 18-21. Deep Pedestal & Outer Zenith (Deep Background: Z ~ -500 to -580)
-    { bx: -360, by: 520,  bz: -510, time: 36.5, vol: 28 },
-    { bx: 370,  by: 530,  bz: -520, time: 38.5, vol: 28 },
-    { bx: -1050,by: -440, bz: -560, time: 40.5, vol: 26 },
-    { bx: 1060, by: -430, bz: -570, time: 42.5, vol: 26 },
-    // 22-25. Extreme Cosmic Periphery (Deep Far Background: Z ~ -600 to -680)
-    { bx: -1070,by: 450,  bz: -620, time: 44.5, vol: 25 },
-    { bx: 1080, by: 460,  bz: -630, time: 46.5, vol: 25 },
-    { bx: 0,    by: -620, bz: -660, time: 48.5, vol: 24 },
-    { bx: 0,    by: 630,  bz: -670, time: 50.5, vol: 24 },
+    // 1. Hero
+    { bx: 0,    by: 0,    bz: 0,    time: 0,    vol: 100, b: 1.0 },
+    // Ring 1 (Inner 4)
+    { bx: -290, by: -135, bz: 0,    time: 3.5,  vol: 60,  b: 1.0 },
+    { bx: 290,  by: 135,  bz: 0,    time: 5.5,  vol: 55,  b: 1.0 },
+    { bx: 290,  by: -135, bz: 0,    time: 7.5,  vol: 50,  b: 1.0 },
+    { bx: -290, by: 135,  bz: 0,    time: 9.5,  vol: 50,  b: 1.0 },
+    // Ring 2 (Cross 4)
+    { bx: -540, by: 0,    bz: -80,  time: 11.5, vol: 45,  b: 0.90 },
+    { bx: 540,  by: 0,    bz: -80,  time: 13.5, vol: 45,  b: 0.90 },
+    { bx: 0,    by: -260, bz: -80,  time: 15.5, vol: 42,  b: 0.90 },
+    { bx: 0,    by: 260,  bz: -80,  time: 17.5, vol: 42,  b: 0.90 },
+    // Ring 3 (Mid Corners 4)
+    { bx: -520, by: -260, bz: -150, time: 19.5, vol: 38,  b: 0.80 },
+    { bx: 520,  by: -260, bz: -150, time: 21.5, vol: 38,  b: 0.80 },
+    { bx: -520, by: 260,  bz: -150, time: 23.5, vol: 36,  b: 0.80 },
+    { bx: 520,  by: 260,  bz: -150, time: 25.5, vol: 36,  b: 0.80 },
+    // Ring 4 (Outer 6)
+    { bx: -760, by: -130, bz: -230, time: 27.5, vol: 34,  b: 0.70 },
+    { bx: 760,  by: 130,  bz: -230, time: 29.5, vol: 34,  b: 0.70 },
+    { bx: 760,  by: -130, bz: -230, time: 31.5, vol: 32,  b: 0.70 },
+    { bx: -760, by: 130,  bz: -230, time: 33.5, vol: 32,  b: 0.70 },
+    { bx: -270, by: -380, bz: -240, time: 35.5, vol: 30,  b: 0.68 },
+    { bx: 270,  by: 380,  bz: -240, time: 37.5, vol: 30,  b: 0.68 },
+    // Deep Background (Far 6 - up to 50% darker!)
+    { bx: -750, by: -370, bz: -350, time: 39.5, vol: 28,  b: 0.55 },
+    { bx: 750,  by: 370,  bz: -350, time: 41.5, vol: 28,  b: 0.55 },
+    { bx: -980, by: 0,    bz: -380, time: 43.5, vol: 25,  b: 0.50 },
+    { bx: 980,  by: 0,    bz: -380, time: 45.5, vol: 25,  b: 0.50 },
+    { bx: 0,    by: -490, bz: -380, time: 47.5, vol: 25,  b: 0.50 },
+    { bx: 0,    by: 490,  bz: -380, time: 49.5, vol: 25,  b: 0.50 }
   ];
 
   const flatConstellation = [];
   baseConstellation.forEach((sec, idx) => {
     if (idx === 0) {
-      flatConstellation.push({ x: 0, y: 0, z: 0, time: 0, vol: 100 });
+      flatConstellation.push({ x: 0, y: 0, z: 0, time: 0, vol: 100, b: 1.0 });
     } else {
-      const jitterX = Math.round((Math.random() - 0.5) * 60);
-      const jitterY = Math.round((Math.random() - 0.5) * 45);
-      const jitterZ = Math.round((Math.random() - 0.5) * 40);
+      const jitterX = Math.round((Math.random() - 0.5) * 40);
+      const jitterY = Math.round((Math.random() - 0.5) * 30);
+      const jitterZ = Math.round((Math.random() - 0.5) * 20);
       flatConstellation.push({
         x: sec.bx + jitterX,
         y: sec.by + jitterY,
         z: sec.bz + jitterZ,
         time: sec.time,
-        vol: sec.vol
+        vol: sec.vol,
+        b: sec.b
       });
     }
   });
@@ -960,12 +960,13 @@ async function launchCinematic(optionType, topic) {
     s.screenPos = { x: pos.x, y: pos.y, z: pos.z };
     if (s.el) {
       s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(0deg) rotateX(0deg) scale(1)`;
+      s.el.style.filter = `brightness(${pos.b})`;
       if (idx === 0) {
         s.el.style.opacity = HOLO_OPACITY;
         s.el.style.transition = 'opacity 1.5s ease, transform 0.4s ease';
       } else {
         s.el.style.opacity = '0';
-        s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease, filter 0.3s ease';
+        s.el.style.transition = 'opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.2s ease';
       }
     }
   });
@@ -1040,9 +1041,9 @@ async function launchCinematic(optionType, topic) {
     }
 
     const sequenceStart = performance.now();
-    const lingerDuration = 5000;    // 5.0s intimate gaze on hero
-    const zoomDuration = 52000;     // 52.0s grand majestic pull-back
-    const totalDuration = lingerDuration + zoomDuration; // 57s total
+    const lingerDuration = 4500;    // 4.5s intimate gaze on hero
+    const zoomDuration = 48000;     // 48.0s smooth cinematic pull-back
+    const totalDuration = lingerDuration + zoomDuration; // 52.5s total
 
     // Helper: Dissolves in screen and starts audio
     function dissolveScreenIn(idx, pos, targetVol) {
@@ -1050,17 +1051,18 @@ async function launchCinematic(optionType, topic) {
       if (!s || !s.el || s._ignited) return;
       s._ignited = true;
 
-      s.el.style.transition = 'opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.5s ease, filter 0.3s ease';
+      s.el.style.transition = 'opacity 2.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2.2s ease';
       s.el.style.opacity = HOLO_OPACITY;
+      s.el.style.filter = `brightness(${pos.b})`;
       s.el.style.boxShadow = '0 0 38px rgba(0,240,255,0.35), inset 0 0 20px rgba(0,240,255,0.18)';
 
       setTimeout(() => {
         if (s.el && isCinematicRunning) {
           s.el.style.boxShadow = '0 0 26px rgba(0,240,255,0.2), inset 0 0 14px rgba(0,240,255,0.08)';
         }
-      }, 2600);
+      }, 2400);
 
-      fadeAudioIn(idx, targetVol, 2500);
+      fadeAudioIn(idx, targetVol, 2200);
     }
 
     function animateConstellation(now) {
@@ -1068,7 +1070,7 @@ async function launchCinematic(optionType, topic) {
       const elapsed = now - sequenceStart;
       const elapsedSec = elapsed / 1000;
 
-      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 5.0s) ─────────────────────────
+      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 4.5s) ─────────────────────────
       if (elapsed <= lingerDuration) {
         const p = elapsed / lingerDuration;
         const driftPitch = Math.sin(p * Math.PI) * 1.4;
@@ -1082,29 +1084,10 @@ async function launchCinematic(optionType, topic) {
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 365 - ease * 980; // from +365 down to -615
+        curZ = 365 - ease * 900; // from +365 down to -535
         const tiltX = Math.sin(pullProgress * Math.PI) * 3;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
       }
-
-      // ── DISTANCE-BASED DARKNESS CALCULATION (Up to 50% darker for distant screens) ──
-      const eyeZ = -curZ; // Camera's depth in viewport coordinate space
-      screens.forEach((s, idx) => {
-        if (s.el && s.screenPos) {
-          const dz = Math.abs(s.screenPos.z - eyeZ);
-          const dx = s.screenPos.x;
-          const dy = s.screenPos.y;
-          const dist3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-          // Map distance (380px to 1500px) to brightness (1.0 down to 0.50)
-          const minD = 380;
-          const maxD = 1500;
-          const normDist = Math.max(0, Math.min(1, (dist3D - minD) / (maxD - minD)));
-          const brightnessVal = (1.0 - normDist * 0.50).toFixed(2); // 1.0 down to 0.50
-
-          s.el.style.filter = `brightness(${brightnessVal})`;
-        }
-      });
 
       // Check and dissolve in secondary screens as their timestamp arrives
       flatConstellation.forEach((pos, idx) => {
