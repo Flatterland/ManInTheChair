@@ -223,7 +223,7 @@ function rebuildDOM() {
     titleBar.className = 'screen-title-bar';
     titleBar.textContent = s.vid.title || 'Live YouTube Feed';
 
-    // Direct embed iframe
+    // Direct embed iframe (with 720p cap)
     const iframe = document.createElement('iframe');
     iframe.src = YT.embedUrl(s.vid.id, s.isMuted);
     iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
@@ -253,6 +253,11 @@ function rebuildDOM() {
     s.el = tile;
     s.iframe = iframe;
     cluster.appendChild(tile);
+
+    // Cap playback quality to 720p to conserve bandwidth
+    setTimeout(() => {
+      postMessageToScreen(i, { event: 'command', func: 'setPlaybackQuality', args: ['hd720'] });
+    }, 1200);
   });
 
   applyLayout();
@@ -835,7 +840,7 @@ function updateUILists() {
   }
 }
 
-// ── 🎬 CINEMATIC EXPERIENCES (5-Second Buffer Windup + Slow Dramatic Pull-Back) ──
+// ── 🎬 CINEMATIC EXPERIENCES (Option 1: Ultra-Slow Asymmetric Floating Constellation) ──
 async function launchCinematic(optionType, topic) {
   if (isCinematicRunning) return;
   isCinematicRunning = true;
@@ -847,13 +852,13 @@ async function launchCinematic(optionType, topic) {
   const windupFill = document.getElementById('windup-progress-fill');
   const vp = document.getElementById('viewport');
 
-  // Activate Pure Pitch Black Mode
+  // Hardcode 100% pure black void
   document.body.classList.add('cinematic-blackout');
   if (overlay) overlay.style.display = 'flex';
   if (windupBox) windupBox.style.display = 'flex';
-  if (banner) banner.textContent = 'BUFFERING 15 LIVE MATRIX FEEDS';
+  if (banner) banner.textContent = 'BUFFERING 15 HD STREAMS (720P)';
 
-  // Load 15 videos into DOM so iframes begin downloading video chunks immediately
+  // Load 15 videos into DOM (with 720p resolution cap)
   const vids15 = await YT.getCinematic15(topic || YT.currentQuery || 'space');
   loadScreens(vids15);
   muteAllScreensQuiet();
@@ -871,6 +876,7 @@ async function launchCinematic(optionType, topic) {
     screens.forEach(s => { if (s.el) s.el.style.opacity = '1'; });
     resetCam();
     unfocus();
+    applyLayout();
     toast('Cinematic exited');
   };
 
@@ -900,106 +906,115 @@ async function launchCinematic(optionType, topic) {
 
   if (isCancelled) return;
 
-  // ── OPTION 1: DRAMATIC SLOW ZOOM-OUT (PURE BLACK BACKGROUND) ─────────────────
+  // ── OPTION 1: ULTRA-SLOW ASYMMETRIC FLOATING CONSTELLATION (PURE BLACK) ───────
   if (optionType === 1) {
-    if (banner) banner.textContent = 'DRAMATIC PULL-BACK MATRIX IGNITION';
-    setLayout('dome');
+    if (banner) banner.textContent = 'COSMIC CONSTELLATION IGNITION';
 
-    // Identify center hero screen
-    const centerIdx = Math.floor(screens.length / 2); // screen #7 out of 15
-    const heroScreen = screens[centerIdx];
+    // 15 Organic Non-Grid Spatial Coordinates (Floating bespoke 3D positions)
+    const constellationMap = [
+      // Hero (0s): Dead center, fills entire frame
+      { x: 0, y: 0, z: 0, rotY: 0, rotX: 0, scale: 2.1, time: 0, vol: 100 },
+      // 2nd video (10s): Upper left floating depth
+      { x: -580, y: -190, z: -140, rotY: 15, rotX: -4, scale: 1.05, time: 10.0, vol: 55 },
+      // 3rd video (14s): Lower right floating depth
+      { x: 600, y: 170, z: -180, rotY: -15, rotX: 5, scale: 1.05, time: 14.0, vol: 50 },
+      // 4th video (17.5s): Upper right floating
+      { x: 560, y: -220, z: -240, rotY: -18, rotX: -6, scale: 1.0, time: 17.5, vol: 45 },
+      // 5th video (21s): Lower left floating
+      { x: -600, y: 220, z: -240, rotY: 17, rotX: 6, scale: 1.0, time: 21.0, vol: 45 },
+      // 6th video (24.5s): Far left floating wing
+      { x: -1040, y: -50, z: -350, rotY: 26, rotX: -2, scale: 0.95, time: 24.5, vol: 40 },
+      // 7th video (28s): Far right floating wing
+      { x: 1040, y: 60, z: -370, rotY: -26, rotX: 3, scale: 0.95, time: 28.0, vol: 40 },
+      // 8th video (31.5s): Crown zenith
+      { x: 0, y: -380, z: -300, rotY: 0, rotX: -16, scale: 0.95, time: 31.5, vol: 38 },
+      // 9th video (35s): Bottom pedestal
+      { x: 0, y: 390, z: -280, rotY: 0, rotX: 18, scale: 0.95, time: 35.0, vol: 38 },
+      // 10th video (38.5s): High top-left apex
+      { x: -480, y: -440, z: -430, rotY: 13, rotX: -20, scale: 0.9, time: 38.5, vol: 35 },
+      // 11th video (42s): High top-right apex
+      { x: 490, y: -430, z: -440, rotY: -14, rotX: -20, scale: 0.9, time: 42.0, vol: 35 },
+      // 12th video (45.5s): Low bottom-left base
+      { x: -500, y: 440, z: -420, rotY: 15, rotX: 20, scale: 0.9, time: 45.5, vol: 32 },
+      // 13th video (49s): Low bottom-right base
+      { x: 490, y: 450, z: -420, rotY: -15, rotX: 20, scale: 0.9, time: 49.0, vol: 32 },
+      // 14th video (52.5s): Outer distant left
+      { x: -1120, y: -380, z: -540, rotY: 30, rotX: -14, scale: 0.85, time: 52.5, vol: 30 },
+      // 15th video (56s): Outer distant right
+      { x: 1120, y: -370, z: -550, rotY: -30, rotX: -14, scale: 0.85, time: 56.0, vol: 30 },
+    ];
 
-    // Start in extreme close-up on the single center screen
-    let curZ = 550;
+    // Position each screen at its organic bespoke coordinate in 3D space
+    screens.forEach((s, idx) => {
+      const pos = constellationMap[idx] || constellationMap[0];
+      if (s.el) {
+        s.el.style.opacity = '0';
+        s.el.style.transform = `translate3d(${pos.x}px,${pos.y}px,${pos.z}px) rotateY(${pos.rotY}deg) rotateX(${pos.rotX}deg) scale(${pos.scale})`;
+      }
+    });
+
+    // Start Hero video right in center, super up-close filling the whole window frame
+    const heroScreen = screens[0];
+    let curZ = 620;
     vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${curZ}px)`;
 
-    // Center screen smoothly fades in out of pitch black
     if (heroScreen && heroScreen.el) {
       heroScreen.el.style.opacity = '1';
-      unmuteScreen(centerIdx);
-      setScreenVolume(centerIdx, 100);
+      unmuteScreen(0);
+      setScreenVolume(0, 100);
     }
 
     const sequenceStart = performance.now();
-    const lingerDuration = 12000;   // 12 seconds lingering in close-up
-    const zoomDuration = 20000;     // 20 seconds slow grand pull-back
-    const totalDuration = lingerDuration + zoomDuration; // 32 seconds total
+    const lingerDuration = 10000;   // 10s lingering on the single full-frame hero video
+    const zoomDuration = 48000;     // 48s ultra-slow grand pull-back
+    const totalDuration = lingerDuration + zoomDuration; // 58 seconds total
 
-    function animateDramaticZoom(now) {
+    function animateConstellation(now) {
       if (isCancelled) return;
       const elapsed = now - sequenceStart;
+      const elapsedSec = elapsed / 1000;
 
-      // ── PHASE 1: LINGER & SUBTLE CINEMATIC DRIFT (0s to 12s) ─────────────────
+      // ── PHASE 1: FULL-FRAME HERO GAZE (0s to 10s) ──────────────────────────
       if (elapsed <= lingerDuration) {
-        const lingerProgress = elapsed / lingerDuration;
-        // Ultra-slow breathing drift
-        const driftPitch = Math.sin(lingerProgress * Math.PI) * 2.2;
-        const driftYaw = Math.sin(lingerProgress * Math.PI * 0.8) * 2.0;
-        curZ = 550 - lingerProgress * 30; // from 550 to 520
+        const p = elapsed / lingerDuration;
+        // Subtle anamorphic breathing drift
+        const driftPitch = Math.sin(p * Math.PI) * 1.8;
+        const driftYaw = Math.sin(p * Math.PI * 0.7) * 1.6;
+        curZ = 620 - p * 20; // 620 to 600
         vp.style.transform = `translate3d(0,0,0) rotateX(${driftPitch}deg) rotateY(${driftYaw}deg) translateZ(${curZ}px)`;
 
-      // ── PHASE 2: GRAND SLOW PULL-BACK & MULTI-AUDIO IGNITION (12s to 32s) ────
+      // ── PHASE 2: ULTRA-SLOW PULL-BACK & SEQUENTIAL CONSTELLATION IGNITION ──
       } else {
         const pullElapsed = elapsed - lingerDuration;
         const pullProgress = Math.min(1, pullElapsed / zoomDuration);
-        // Smooth exponential ease-out
         const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
 
-        curZ = 520 - ease * 900; // from +520 down to -380
-        const tiltX = Math.sin(pullProgress * Math.PI) * 7;
+        curZ = 600 - ease * 1020; // from +600 down to -420
+        const tiltX = Math.sin(pullProgress * Math.PI) * 5;
         vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
-
-        // Fade in floor grid gently halfway through
-        if (pullProgress > 0.4) {
-          document.body.classList.add('grid-visible');
-        }
-
-        // Concentric Ring 1 (screens immediately adjacent to center)
-        if (pullProgress > 0.18) {
-          const ring1 = [centerIdx - 1, centerIdx + 1, centerIdx - 3, centerIdx + 3];
-          ring1.forEach(idx => {
-            if (screens[idx] && screens[idx].el && screens[idx].el.style.opacity !== '1') {
-              screens[idx].el.style.opacity = '1';
-              unmuteScreen(idx);
-              setScreenVolume(idx, 55);
-            }
-          });
-        }
-
-        // Concentric Ring 2 (diagonal corners)
-        if (pullProgress > 0.48) {
-          const ring2 = [centerIdx - 4, centerIdx - 2, centerIdx + 2, centerIdx + 4];
-          ring2.forEach(idx => {
-            if (screens[idx] && screens[idx].el && screens[idx].el.style.opacity !== '1') {
-              screens[idx].el.style.opacity = '1';
-              unmuteScreen(idx);
-              setScreenVolume(idx, 40);
-            }
-          });
-        }
-
-        // Concentric Ring 3 (outer matrix flanks)
-        if (pullProgress > 0.75) {
-          screens.forEach((s, idx) => {
-            if (s.el && s.el.style.opacity !== '1') {
-              s.el.style.opacity = '1';
-              unmuteScreen(idx);
-              setScreenVolume(idx, 32);
-            }
-          });
-        }
       }
+
+      // Check and ignite each video as its timestamp is reached
+      constellationMap.forEach((pos, idx) => {
+        if (elapsedSec >= pos.time && screens[idx] && screens[idx].el) {
+          if (screens[idx].el.style.opacity !== '1') {
+            screens[idx].el.style.opacity = '1';
+            unmuteScreen(idx);
+            setScreenVolume(idx, pos.vol);
+          }
+        }
+      });
 
       if (elapsed < totalDuration) {
-        requestAnimationFrame(animateDramaticZoom);
+        requestAnimationFrame(animateConstellation);
       } else {
         isCinematicRunning = false;
-        document.body.classList.remove('cinematic-blackout');
-        if (overlay) overlay.style.display = 'none';
-        toast('Dramatic Zoom Complete: 15-Stream Command Deck Live');
+        // Keep pure pitch black background until user exits
+        if (banner) banner.textContent = '15-STREAM CONSTELLATION ACTIVE';
+        toast('Constellation complete: 15 Organic Feeds Running in Void');
       }
     }
-    requestAnimationFrame(animateDramaticZoom);
+    requestAnimationFrame(animateConstellation);
 
   // ── OPTION 2: 360° CYLINDRICAL VORTEX WARP ──────────────────────────────────
   } else if (optionType === 2) {
@@ -1015,7 +1030,7 @@ async function launchCinematic(optionType, topic) {
     let speed = 2.8;
     let curY = 240;
     const startTime = performance.now();
-    const duration = 12000;
+    const duration = 14000;
 
     function animateVortex(now) {
       if (isCancelled) return;
@@ -1032,7 +1047,6 @@ async function launchCinematic(optionType, topic) {
         requestAnimationFrame(animateVortex);
       } else {
         isCinematicRunning = false;
-        document.body.classList.remove('cinematic-blackout');
         if (overlay) overlay.style.display = 'none';
         toast('Vortex warp locked into orbital glide');
       }
@@ -1081,7 +1095,7 @@ async function launchCinematic(optionType, topic) {
     });
 
     const startTime = performance.now();
-    const duration = 16000;
+    const duration = 18000;
 
     function animateFlyAround(now) {
       if (isCancelled) return;

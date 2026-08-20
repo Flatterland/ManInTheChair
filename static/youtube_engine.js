@@ -172,9 +172,10 @@ const YT = {
     return null;
   },
 
+  // Max out at 720p to preserve bandwidth across multi-screen arrays
   embedUrl(id, isMuted = true) {
     const origin = window.location.origin || 'https://flatterland.github.io';
-    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&origin=${encodeURIComponent(origin)}`;
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&vq=hd720&suggestedQuality=hd720&origin=${encodeURIComponent(origin)}`;
   },
 
   // Smart immediate matcher: defaults to 9 screens
