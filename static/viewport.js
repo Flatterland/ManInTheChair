@@ -1,5 +1,5 @@
 // ─── 3D Viewport, Multi-Screen Spatial Matrix & Visual FX Engine ──────────────
-let screens = [];            // [{ vid:{id,title,ch}, custom:{scale,x,y,z,rot}, isMuted, volume, baseVol, computedVol }]
+let screens = [];            // [{ vid:{id,title,ch}, custom:{scale,x,y,z,rot}, isMuted, volume, computedVol, screenPos }]
 let focusedIdx = null;
 let cameraMode = 'chair';
 let layout = 'dome';
@@ -8,7 +8,7 @@ let masterVolume = 100;
 let masterMuted = false;
 
 // Layout Spacing & Density
-let screenSpacing = 1.0;     // 0.5 to 1.8
+let screenSpacing = 1.0;     // 0.4 to 1.8
 
 // Visual FX state
 let visualFX = {
@@ -17,14 +17,13 @@ let visualFX = {
   dofStrength: 6,
   scanlinesEnabled: true,
   scanlineOpacity: 0.22,
-  bloomGlow: 1.0,
   floorGridBrightness: 1.0
 };
 
 // Spatial 3D Audio state
 let spatialAudio = {
   enabled: true,
-  separation: 1.0,           // 0 to 2.5
+  separation: 1.0,           // 0.2 to 2.5
   singlePriority: false,     // Closest screen gets full dominance
   lastUpdate: 0
 };
@@ -139,9 +138,9 @@ function loop() {
     }
   }
 
-  // Spatial Audio & DoF update loop (throttled to ~15fps for efficiency)
+  // Spatial Audio & DoF update loop
   const now = performance.now();
-  if (now - spatialAudio.lastUpdate > 65) {
+  if (now - spatialAudio.lastUpdate > 65 && !isCinematicRunning) {
     spatialAudio.lastUpdate = now;
     updateSpatialAudioAndDoF();
   }
@@ -266,7 +265,6 @@ function applyLayout() {
   const n = screens.length;
   if (n === 0) return;
 
-  // Calculate dynamic columns based on screen count
   let cols = 3;
   if (n <= 2) cols = n;
   else if (n <= 4) cols = 2;
@@ -275,7 +273,7 @@ function applyLayout() {
   else cols = 5;
 
   const rows = Math.ceil(n / cols);
-  const scaleMod = n > 9 ? 0.85 : 1.0;
+  const scaleMod = n > 9 ? 0.84 : 1.0;
 
   screens.forEach((s, i) => {
     if (!s.el) return;
@@ -322,7 +320,6 @@ function applyLayout() {
         yTier = (i % 2 === 0 ? -130 : 130) * screenSpacing;
       }
 
-      // Convert polar to cartesian for spatial audio
       const rad = (baseAngle * Math.PI) / 180;
       s.screenPos = {
         x: Math.sin(rad) * radius + c.x,
@@ -347,7 +344,6 @@ function updateSpatialAudioAndDoF() {
 
   screens.forEach((s, idx) => {
     if (!s.screenPos) return;
-    // Calculate distance relative to current camera position & zoom
     const dx = s.screenPos.x - camX;
     const dy = s.screenPos.y - camY;
     const dz = s.screenPos.z - (-camZ);
@@ -368,10 +364,8 @@ function updateSpatialAudioAndDoF() {
       let spatialFactor = 1.0;
 
       if (spatialAudio.singlePriority) {
-        // Boost closest screen to 100%, attenuate others steeply
         spatialFactor = idx === closestIdx ? 1.0 : Math.max(0.05, 1.0 - (dist - minDistance) / 400);
       } else {
-        // Continuous spatial falloff based on separation slider
         const normalized = (dist - minDistance) / (700 / Math.max(0.2, spatialAudio.separation));
         spatialFactor = Math.max(0.1, 1.0 / (1.0 + normalized * spatialAudio.separation * 1.5));
       }
@@ -383,7 +377,7 @@ function updateSpatialAudioAndDoF() {
       }
     }
 
-    // 2. Depth of Field (DoF) Blur Calculation
+    // 2. Depth of Field Blur
     if (visualFX.dofEnabled && s.el) {
       const isFocusedTile = idx === focusedIdx;
       if (isFocusedTile) {
@@ -414,13 +408,11 @@ function applyVisualFX() {
     document.body.classList.add('fx-synthwave');
   }
 
-  // Scanlines toggle
   document.documentElement.style.setProperty(
     '--scanline-opacity',
     visualFX.scanlinesEnabled ? visualFX.scanlineOpacity : 0
   );
 
-  // Floor grid brightness
   const grid = document.querySelector('.floor-grid');
   if (grid) grid.style.opacity = visualFX.floorGridBrightness;
 }
@@ -449,7 +441,7 @@ function unmuteScreen(idx) {
   const s = screens[idx];
   if (!s) return;
 
-  if (soloAudioMode) {
+  if (soloAudioMode && !isCinematicRunning) {
     screens.forEach((other, oIdx) => {
       if (oIdx !== idx) muteScreen(oIdx);
     });
@@ -462,7 +454,7 @@ function unmuteScreen(idx) {
 
   updateScreenAudioUI(idx);
   updateUILists();
-  if (typeof toast === 'function') toast(`🔊 Screen #${idx+1} Audio Active (${s.vid.title.slice(0, 22)}...)`);
+  if (typeof toast === 'function' && !isCinematicRunning) toast(`🔊 Screen #${idx+1} Audio Active (${s.vid.title.slice(0, 22)}...)`);
 }
 
 function muteScreen(idx) {
@@ -503,7 +495,6 @@ function setMasterVolume(vol) {
   updateUILists();
 }
 
-// Master Mute respects Solo Mode
 function toggleMasterMute() {
   masterMuted = !masterMuted;
   if (masterMuted) {
@@ -559,7 +550,6 @@ function silentlyCycleScreen(idx) {
   if (!screens[idx]) return;
   const currentIds = screens.map(s => s.vid.id);
   const nextVid = YT.getNextResult(currentIds);
-  console.log(`[MitC] Silently replacing Screen #${idx+1} with: "${nextVid.title}" (${nextVid.id})`);
   replaceScreenVideo(idx, nextVid);
 }
 
@@ -589,7 +579,7 @@ function replaceScreenVideo(idx, newVid) {
   updateUILists();
 }
 
-// YouTube postMessage Error Interceptor (Auto-cycles on error)
+// YouTube postMessage Error Interceptor
 window.addEventListener('message', e => {
   if (!e.data || typeof e.data !== 'string') return;
   let data;
@@ -598,7 +588,6 @@ window.addEventListener('message', e => {
     screens.forEach((s, idx) => {
       const iframe = s.el && s.el.querySelector('iframe');
       if (iframe && iframe.contentWindow === e.source) {
-        console.warn(`[MitC] Intercepted video error on Screen #${idx+1} — silently cycling`);
         silentlyCycleScreen(idx);
       }
     });
@@ -733,7 +722,7 @@ function loadLayout() {
   } catch (e) { return false; }
 }
 
-// ── UI Synchronization (Playlist list & Volume Mixer sync) ──────────────────
+// ── UI Synchronization ──────────────────────────────────────────────────────
 function updateUILists() {
   const statEl = document.getElementById('stat-count');
   if (statEl) statEl.textContent = screens.length;
@@ -846,130 +835,217 @@ function updateUILists() {
   }
 }
 
-// ── 🎬 CINEMATIC EXPERIENCES (Options 1–4) ──────────────────────────────────
+// ── 🎬 CINEMATIC EXPERIENCES (5-Second Buffer Windup + Slow Dramatic Pull-Back) ──
 async function launchCinematic(optionType, topic) {
   if (isCinematicRunning) return;
   isCinematicRunning = true;
 
   const overlay = document.getElementById('cinematic-overlay');
   const banner = document.getElementById('cinematic-banner');
+  const windupBox = document.getElementById('cinematic-windup-box');
+  const windupTimer = document.getElementById('windup-timer-text');
+  const windupFill = document.getElementById('windup-progress-fill');
+  const vp = document.getElementById('viewport');
+
+  // Activate Pure Pitch Black Mode
+  document.body.classList.add('cinematic-blackout');
   if (overlay) overlay.style.display = 'flex';
+  if (windupBox) windupBox.style.display = 'flex';
+  if (banner) banner.textContent = 'BUFFERING 15 LIVE MATRIX FEEDS';
 
-  toast(`🎬 LAUNCHING CINEMATIC EXPERIENCE: OPTION ${optionType}`);
-
-  // Fetch 15 video queue for the cinematic experience
+  // Load 15 videos into DOM so iframes begin downloading video chunks immediately
   const vids15 = await YT.getCinematic15(topic || YT.currentQuery || 'space');
   loadScreens(vids15);
   muteAllScreensQuiet();
+
+  // Hide all screens during 5-second buffer warmup
+  screens.forEach(s => { if (s.el) s.el.style.opacity = '0'; });
 
   let isCancelled = false;
   cinematicCancelFn = () => {
     isCancelled = true;
     isCinematicRunning = false;
+    document.body.classList.remove('cinematic-blackout', 'grid-visible');
     if (overlay) overlay.style.display = 'none';
+    if (windupBox) windupBox.style.display = 'none';
+    screens.forEach(s => { if (s.el) s.el.style.opacity = '1'; });
     resetCam();
     unfocus();
     toast('Cinematic exited');
   };
 
-  const vp = document.getElementById('viewport');
+  // ── 5-SECOND BUFFER WINDUP COUNTDOWN ─────────────────────────────────────────
+  const warmupStart = performance.now();
+  const warmupDuration = 5000;
 
-  // Option 1: DRAMATIC ZOOM OUT
+  await new Promise(resolve => {
+    function tickWarmup(now) {
+      if (isCancelled) return resolve();
+      const elapsed = now - warmupStart;
+      const remaining = Math.max(0, (warmupDuration - elapsed) / 1000);
+      const pct = Math.min(100, (elapsed / warmupDuration) * 100);
+
+      if (windupTimer) windupTimer.textContent = `${remaining.toFixed(1)}s`;
+      if (windupFill) windupFill.style.width = `${pct}%`;
+
+      if (elapsed < warmupDuration) {
+        requestAnimationFrame(tickWarmup);
+      } else {
+        if (windupBox) windupBox.style.display = 'none';
+        resolve();
+      }
+    }
+    requestAnimationFrame(tickWarmup);
+  });
+
+  if (isCancelled) return;
+
+  // ── OPTION 1: DRAMATIC SLOW ZOOM-OUT (PURE BLACK BACKGROUND) ─────────────────
   if (optionType === 1) {
     if (banner) banner.textContent = 'DRAMATIC PULL-BACK MATRIX IGNITION';
     setLayout('dome');
 
-    // Hide all screens initially
-    screens.forEach(s => { if (s.el) s.el.style.opacity = '0'; });
+    // Identify center hero screen
+    const centerIdx = Math.floor(screens.length / 2); // screen #7 out of 15
+    const heroScreen = screens[centerIdx];
 
-    // Focus center screen (#0)
-    const centerIdx = Math.floor(screens.length / 2);
-    if (screens[centerIdx] && screens[centerIdx].el) {
-      screens[centerIdx].el.style.opacity = '1';
+    // Start in extreme close-up on the single center screen
+    let curZ = 550;
+    vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${curZ}px)`;
+
+    // Center screen smoothly fades in out of pitch black
+    if (heroScreen && heroScreen.el) {
+      heroScreen.el.style.opacity = '1';
       unmuteScreen(centerIdx);
+      setScreenVolume(centerIdx, 100);
     }
 
-    // Start extreme close-up
-    let currentZ = 520;
-    let pitch = 0;
-    vp.style.transform = `translate3d(0,0,0) rotateX(0deg) rotateY(0deg) translateZ(${currentZ}px)`;
+    const sequenceStart = performance.now();
+    const lingerDuration = 12000;   // 12 seconds lingering in close-up
+    const zoomDuration = 20000;     // 20 seconds slow grand pull-back
+    const totalDuration = lingerDuration + zoomDuration; // 32 seconds total
 
-    const startTime = performance.now();
-    const duration = 12000; // 12 seconds
-
-    function animateZoomOut(now) {
+    function animateDramaticZoom(now) {
       if (isCancelled) return;
-      const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / duration);
-      const ease = 0.5 - Math.cos(progress * Math.PI) / 2; // smooth ease in-out
+      const elapsed = now - sequenceStart;
 
-      currentZ = 520 - ease * 880; // from +520 to -360
-      pitch = Math.sin(progress * Math.PI) * 12; // subtle dynamic tilt
-      vp.style.transform = `translate3d(0,0,0) rotateX(${pitch}deg) rotateY(0deg) translateZ(${currentZ}px)`;
+      // ── PHASE 1: LINGER & SUBTLE CINEMATIC DRIFT (0s to 12s) ─────────────────
+      if (elapsed <= lingerDuration) {
+        const lingerProgress = elapsed / lingerDuration;
+        // Ultra-slow breathing drift
+        const driftPitch = Math.sin(lingerProgress * Math.PI) * 2.2;
+        const driftYaw = Math.sin(lingerProgress * Math.PI * 0.8) * 2.0;
+        curZ = 550 - lingerProgress * 30; // from 550 to 520
+        vp.style.transform = `translate3d(0,0,0) rotateX(${driftPitch}deg) rotateY(${driftYaw}deg) translateZ(${curZ}px)`;
 
-      // Progressively reveal surrounding screens in expanding concentric rings
-      const screensToReveal = Math.floor(progress * screens.length);
-      for (let i = 0; i < screens.length; i++) {
-        if (screens[i] && screens[i].el) {
-          if (i <= screensToReveal || i === centerIdx) {
-            screens[i].el.style.opacity = '1';
-            if (screens[i].isMuted && progress > 0.45 && !soloAudioMode) {
-              unmuteScreen(i);
+      // ── PHASE 2: GRAND SLOW PULL-BACK & MULTI-AUDIO IGNITION (12s to 32s) ────
+      } else {
+        const pullElapsed = elapsed - lingerDuration;
+        const pullProgress = Math.min(1, pullElapsed / zoomDuration);
+        // Smooth exponential ease-out
+        const ease = 0.5 - Math.cos(pullProgress * Math.PI) / 2;
+
+        curZ = 520 - ease * 900; // from +520 down to -380
+        const tiltX = Math.sin(pullProgress * Math.PI) * 7;
+        vp.style.transform = `translate3d(0,0,0) rotateX(${tiltX}deg) rotateY(0deg) translateZ(${curZ}px)`;
+
+        // Fade in floor grid gently halfway through
+        if (pullProgress > 0.4) {
+          document.body.classList.add('grid-visible');
+        }
+
+        // Concentric Ring 1 (screens immediately adjacent to center)
+        if (pullProgress > 0.18) {
+          const ring1 = [centerIdx - 1, centerIdx + 1, centerIdx - 3, centerIdx + 3];
+          ring1.forEach(idx => {
+            if (screens[idx] && screens[idx].el && screens[idx].el.style.opacity !== '1') {
+              screens[idx].el.style.opacity = '1';
+              unmuteScreen(idx);
+              setScreenVolume(idx, 55);
             }
-          }
+          });
+        }
+
+        // Concentric Ring 2 (diagonal corners)
+        if (pullProgress > 0.48) {
+          const ring2 = [centerIdx - 4, centerIdx - 2, centerIdx + 2, centerIdx + 4];
+          ring2.forEach(idx => {
+            if (screens[idx] && screens[idx].el && screens[idx].el.style.opacity !== '1') {
+              screens[idx].el.style.opacity = '1';
+              unmuteScreen(idx);
+              setScreenVolume(idx, 40);
+            }
+          });
+        }
+
+        // Concentric Ring 3 (outer matrix flanks)
+        if (pullProgress > 0.75) {
+          screens.forEach((s, idx) => {
+            if (s.el && s.el.style.opacity !== '1') {
+              s.el.style.opacity = '1';
+              unmuteScreen(idx);
+              setScreenVolume(idx, 32);
+            }
+          });
         }
       }
 
-      if (progress < 1) {
-        requestAnimationFrame(animateZoomOut);
+      if (elapsed < totalDuration) {
+        requestAnimationFrame(animateDramaticZoom);
       } else {
         isCinematicRunning = false;
+        document.body.classList.remove('cinematic-blackout');
         if (overlay) overlay.style.display = 'none';
-        toast('Cinematic complete: 15-Stream Command Deck Active');
+        toast('Dramatic Zoom Complete: 15-Stream Command Deck Live');
       }
     }
-    requestAnimationFrame(animateZoomOut);
+    requestAnimationFrame(animateDramaticZoom);
 
-  // Option 2: 360° VORTEX WARP
+  // ── OPTION 2: 360° CYLINDRICAL VORTEX WARP ──────────────────────────────────
   } else if (optionType === 2) {
     if (banner) banner.textContent = '360° CYLINDRICAL VORTEX WARP';
     setLayout('ring');
-    screens.forEach(s => { if (s.el) s.el.style.opacity = '1'; });
+    screens.forEach((s, idx) => {
+      if (s.el) s.el.style.opacity = '1';
+      unmuteScreen(idx);
+      setScreenVolume(idx, 35);
+    });
 
     let angle = 0;
-    let speed = 2.4;
+    let speed = 2.8;
     let curY = 240;
     const startTime = performance.now();
-    const duration = 10000;
+    const duration = 12000;
 
     function animateVortex(now) {
       if (isCancelled) return;
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / duration);
 
-      speed = 2.4 * (1 - progress * 0.85); // start fast, ease down
+      speed = 2.8 * (1 - progress * 0.88);
       angle = (angle + speed) % 360;
-      curY = 240 - progress * 240; // glide down from high angle
+      curY = 240 - progress * 240;
 
-      vp.style.transform = `translate3d(0,${curY}px,0) rotateX(16deg) rotateY(${angle}deg) translateZ(80px)`;
+      vp.style.transform = `translate3d(0,${curY}px,0) rotateX(15deg) rotateY(${angle}deg) translateZ(80px)`;
 
       if (progress < 1) {
         requestAnimationFrame(animateVortex);
       } else {
         isCinematicRunning = false;
+        document.body.classList.remove('cinematic-blackout');
         if (overlay) overlay.style.display = 'none';
         toast('Vortex warp locked into orbital glide');
       }
     }
     requestAnimationFrame(animateVortex);
 
-  // Option 3: TACTICAL MATRIX DEPLOYMENT (GRID INVASION)
+  // ── OPTION 3: TACTICAL MATRIX DEPLOYMENT (GRID INVASION) ────────────────────
   } else if (optionType === 3) {
     if (banner) banner.textContent = 'TACTICAL GREEN MATRIX DEPLOYMENT';
     setVisualTheme('green-vector');
     setLayout('flat');
 
-    screens.forEach(s => { if (s.el) { s.el.style.opacity = '0'; s.el.style.transform += ' translateY(-600px)'; } });
+    screens.forEach(s => { if (s.el) { s.el.style.opacity = '0'; } });
 
     let count = 0;
     const interval = setInterval(() => {
@@ -978,44 +1054,53 @@ async function launchCinematic(optionType, topic) {
         setTimeout(() => {
           if (!isCancelled) {
             isCinematicRunning = false;
+            document.body.classList.remove('cinematic-blackout');
             if (overlay) overlay.style.display = 'none';
             toast('Tactical matrix fully operational');
           }
-        }, 1200);
+        }, 1500);
         return;
       }
       if (screens[count] && screens[count].el) {
         screens[count].el.style.opacity = '1';
+        unmuteScreen(count);
+        setScreenVolume(count, 40);
         applyLayout();
       }
       count++;
-    }, 220);
+    }, 280);
 
-  // Option 4: SPOTLIGHT ORBITAL FLY-AROUND
+  // ── OPTION 4: SPOTLIGHT ACOUSTIC FLY-AROUND ────────────────────────────────
   } else if (optionType === 4) {
     if (banner) banner.textContent = 'SPOTLIGHT ACOUSTIC FLY-AROUND';
     setLayout('dome');
+    screens.forEach((s, idx) => {
+      if (s.el) s.el.style.opacity = '1';
+      unmuteScreen(idx);
+      setScreenVolume(idx, 40);
+    });
+
     const startTime = performance.now();
-    const duration = 14000;
+    const duration = 16000;
 
     function animateFlyAround(now) {
       if (isCancelled) return;
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / duration);
 
-      // Figure-8 dynamic trajectory
-      const t = (elapsed / 1000) * 1.2;
-      const curX = Math.sin(t) * 280;
-      const curY = Math.sin(t * 2) * 90;
-      const curRotY = Math.cos(t) * 28;
-      const curRotX = -Math.sin(t * 2) * 12;
+      const t = (elapsed / 1000) * 1.1;
+      const curX = Math.sin(t) * 300;
+      const curY = Math.sin(t * 2) * 100;
+      const curRotY = Math.cos(t) * 26;
+      const curRotX = -Math.sin(t * 2) * 14;
 
-      vp.style.transform = `translate3d(${curX}px,${curY}px,0) rotateX(${curRotX}deg) rotateY(${curRotY}deg) translateZ(120px)`;
+      vp.style.transform = `translate3d(${curX}px,${curY}px,0) rotateX(${curRotX}deg) rotateY(${curRotY}deg) translateZ(140px)`;
 
       if (progress < 1) {
         requestAnimationFrame(animateFlyAround);
       } else {
         isCinematicRunning = false;
+        document.body.classList.remove('cinematic-blackout');
         if (overlay) overlay.style.display = 'none';
         toast('Spotlight flight path complete');
       }

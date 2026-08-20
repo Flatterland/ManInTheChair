@@ -18,8 +18,18 @@
     <div id="cinematic-overlay" style="display:none;">
         <div class="cinematic-hud">
             <span class="cinematic-rec-dot">● REC</span>
-            <div id="cinematic-banner">DRAMATIC PULL-BACK MATRIX IGNITION</div>
+            <div id="cinematic-banner">INITIALIZING CINEMATIC SEQUENCE</div>
             <button class="cinematic-exit-btn" id="btn-cinematic-exit">EXIT CINEMATIC [ESC]</button>
+        </div>
+
+        <!-- 5-Second Buffer Windup Countdown Display -->
+        <div class="cinematic-windup-box" id="cinematic-windup-box" style="display:none;">
+            <div class="windup-title">BUFFERING 15 HIGH-DEF STREAMS</div>
+            <div class="windup-timer" id="windup-timer-text">5.0s</div>
+            <div class="windup-sub" id="windup-sub-text">PRE-HEATING MATRIX IFRAME BUFFERS...</div>
+            <div class="windup-progress-bar">
+                <div class="windup-progress-fill" id="windup-progress-fill"></div>
+            </div>
         </div>
     </div>
 
@@ -257,14 +267,14 @@
     <div class="modal-back" id="cinematic-modal">
         <div class="modal cinematic-modal-box">
             <div class="modal-title">🎬 LAUNCH CINEMATIC 15-STREAM EXPERIENCE</div>
-            <div class="modal-sub">Buffers 15 streams and initiates choreographed camera, lighting & audio choreography</div>
+            <div class="modal-sub">Buffers 15 streams (5-second preheat) and initiates choreographed camera & multi-audio ignition</div>
             
             <input id="cinematic-input" type="text" placeholder="Enter topic or leave blank for current category..." />
             
             <div class="cinematic-options-grid">
                 <button class="cin-opt-card" data-opt="1">
-                    <div class="cin-opt-title">🌟 OPTION 1: DRAMATIC ZOOM OUT</div>
-                    <div class="cin-opt-desc">Starts in pitch black with single isolated video & loud audio, camera slowly pulls back as 14 surrounding screens ignite in concentric rings and volume builds into a wall of sound.</div>
+                    <div class="cin-opt-title">🌟 OPTION 1: DRAMATIC ZOOM OUT (PURE BLACK)</div>
+                    <div class="cin-opt-desc">Pure pitch black background. Fades into single center video with loud clear audio. Lingers 12s in close-up, then executes an ultra-slow dramatic pull-back as 14 surrounding screens ignite in expanding rings with escalating layered sound.</div>
                 </button>
 
                 <button class="cin-opt-card" data-opt="2">
