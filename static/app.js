@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
       p.classList.add('active');
       const cat = p.dataset.cat;
+      document.getElementById('search-input').value = cat;
       executeSearch(cat);
     });
   });
@@ -202,12 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') document.getElementById('modal-cancel').click();
   });
 
-  // ── Cinematic Sequences Modal & Launchers ─────────────────────────────────
+  // ── Cinematic Sequences Modal & Search Reader ────────────────────────────
   const cinematicModal = document.getElementById('cinematic-modal');
+  const cinematicInput = document.getElementById('cinematic-input');
+
   document.getElementById('btn-cinematic').addEventListener('click', () => {
+    // Read whatever is currently typed in the main search bar and pre-fill
+    const searchBarVal = document.getElementById('search-input').value.trim();
+    cinematicInput.value = searchBarVal || YT.currentQuery || '';
     cinematicModal.style.display = 'flex';
-    document.getElementById('cinematic-input').focus();
+    cinematicInput.focus();
   });
+
   document.getElementById('cinematic-cancel').addEventListener('click', () => {
     cinematicModal.style.display = 'none';
   });
@@ -218,10 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.cin-opt-card').forEach(card => {
     card.addEventListener('click', () => {
       const opt = parseInt(card.dataset.opt, 10);
-      const customTopic = document.getElementById('cinematic-input').value.trim();
+      // Read directly from modal input OR main search input
+      const modalTopic = cinematicInput.value.trim();
+      const mainSearchTopic = document.getElementById('search-input').value.trim();
+      const topicToSearch = modalTopic || mainSearchTopic || YT.currentQuery || 'space';
+
       cinematicModal.style.display = 'none';
-      document.getElementById('cinematic-input').value = '';
-      launchCinematic(opt, customTopic);
+      cinematicInput.value = '';
+      launchCinematic(opt, topicToSearch);
     });
   });
 
